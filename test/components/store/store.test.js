@@ -1,4 +1,4 @@
-const system = require('../../system');
+const system = require('../../../system');
 
 describe('Store component tests', () => {
   const sys = system();
