@@ -38,6 +38,7 @@
     "supertest": "^4.0.2"
   },
   "dependencies": {
+    "archiver": "^5.0.0",
     "body-parser": "^1.19.0",
     "boom": "^7.3.0",
     "bunyan": "^1.8.12",
