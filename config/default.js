@@ -3,6 +3,19 @@ module.exports = {
     host: '0.0.0.0',
     port: 4000,
   },
+  mongodb: {
+    url: process.env.MONGO_CONNECTION_STRING || 'mongodb://localhost:27017',
+    options: { useUnifiedTopology: true },
+  },
+  store: {
+    daily: {
+      collections: {
+        success: process.env.SUCCESS_COLLECTION_NAME || 'success',
+        fail: process.env.FAIL_COLLECTION_NAME || 'fail',
+      },
+      databaseName: process.env.DAILY_DATABASE_NAME || 'echoes-backup',
+    },
+  },
   routes: {
     admin: {
       swaggerOptions: {
