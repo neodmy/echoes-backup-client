@@ -9,7 +9,8 @@
     "test:report": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit --coverage",
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit --reporters=default",
     "lint": "eslint .",
-    "manifest": "node_modules/make-manifest/bin/make-manifest"
+    "manifest": "node_modules/make-manifest/bin/make-manifest",
+    "gitLog": "node gitLogFormatter/index.js"
   },
   "husky": {
     "hooks": {
@@ -53,5 +54,8 @@
     "systemic": "^3.3.0",
     "systemic-domain-runner": "^1.1.0",
     "systemic-express": "^1.1.1"
+  },
+  "developers": {
+    "David Yusta": "neodmy"
   }
 }
