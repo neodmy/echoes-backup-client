@@ -16,6 +16,9 @@ module.exports = {
       databaseName: process.env.DAILY_DATABASE_NAME || 'echoes-backup',
     },
   },
+  archiver: {
+    sourceDir: process.env.ECHOES_SOURCE_DIRECTORY || 'echoes/Fuenlabrada/2020-09-02',
+  },
   routes: {
     admin: {
       swaggerOptions: {
