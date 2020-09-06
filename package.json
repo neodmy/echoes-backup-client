@@ -8,6 +8,8 @@
     "start": "node index.js",
     "test:report": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit --coverage",
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit --reporters=default",
+    "infra:up": "bash -c 'docker-compose --file docker/test/docker-compose.yml --project-name mongo-echoes-backup-client-test up -d --force-recreate --build'",
+    "infra:down": "bash -c 'docker-compose --file docker/test/docker-compose.yml --project-name mongo-echoes-backup-client-test stop'",
     "lint": "eslint .",
     "manifest": "node_modules/make-manifest/bin/make-manifest",
     "gitLog": "node gitLogFormatter/index.js"
@@ -46,6 +48,7 @@
     "express-swagger-generator": "^1.1.15",
     "hogan.js": "^3.0.2",
     "make-manifest": "^1.0.1",
+    "moment": "^2.27.0",
     "on-headers": "^1.0.2",
     "optimist": "^0.6.1",
     "optional": "^0.1.4",
@@ -53,7 +56,8 @@
     "ramda": "^0.26.1",
     "systemic": "^3.3.0",
     "systemic-domain-runner": "^1.1.0",
-    "systemic-express": "^1.1.1"
+    "systemic-express": "^1.1.1",
+    "systemic-mongodb": "^2.0.2"
   },
   "developers": {
     "David Yusta": "neodmy"
