@@ -10,17 +10,39 @@ module.exports = () => {
     logger.info(`${initializingMessage}`);
     debug(`${initializingMessage}`);
 
+    const getStatistics = filePath => {
+      const statisticsMap = new Map();
+
+      const countFilesInDirectory = directoryPath => {
+        const files = fs.readdirSync(directoryPath);
+        files.forEach(file => {
+          const absolutePath = path.join(directoryPath, file);
+          if (fs.lstatSync(absolutePath).isDirectory()) {
+            countFilesInDirectory(absolutePath);
+          } else {
+            const count = statisticsMap.get(directoryPath);
+            statisticsMap.set(directoryPath, count ? count + 1 : 1);
+          }
+        });
+      };
+      countFilesInDirectory(filePath);
+
+      return Array.from(statisticsMap, ([absolutePath, value]) => ({ [absolutePath.replace(filePath, '')]: value }));
+    };
+
     // eslint-disable-next-line consistent-return
     const compressFile = filename => new Promise((resolve, reject) => {
       try {
         const sourceFilePath = path.join(sourceDir, filename);
         if (!fs.existsSync(sourceFilePath)) return reject(new Error(`File ${sourceFilePath} does not exists`));
 
+        const statistics = getStatistics(sourceFilePath);
         const output = fs.createWriteStream(`${sourceFilePath}.zip`);
         const archive = archiver('zip');
 
         output.on('close', () => {
-          logger.info(`File ${filename} compressed. Total MB ${archive.pointer() / 100000}`);
+          const sizeInMB = Math.round(((archive.pointer() / 100000) + Number.EPSILON) * 100) / 100;
+          logger.info(`File ${filename} compressed. Total MB ${sizeInMB}`);
         });
         archive.on('error', err => {
           reject(err);
@@ -29,7 +51,7 @@ module.exports = () => {
         archive.pipe(output);
         archive.directory(sourceFilePath, false);
         archive.finalize()
-          .then(() => resolve(true))
+          .then(() => resolve(statistics))
           .catch(err => reject(err));
       } catch (error) {
         reject(error);
