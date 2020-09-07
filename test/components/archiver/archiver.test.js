@@ -29,7 +29,17 @@ describe('Archiver component tests', () => {
   test('should compress a file providing its name', async () => {
     const filename = '2020-09-10';
     const result = await archiver.compressFile('2020-09-10');
-    expect(result).toBe(true);
+    const expectResult = [
+      { '/gnuplot/specs/fakes': 1 },
+      { '/gnuplot/specs/overdense': 1 },
+      { '/gnuplot/specs': 1 },
+      { '/gnuplot/specs/underdense': 1 },
+      { '/screenshots/fakes': 1 },
+      { '/screenshots/overdense': 1 },
+      { '/screenshots/underdense': 1 },
+      { '/stats': 1 },
+    ];
+    expect(result).toEqual(expectResult);
     fs.unlinkSync(path.join(__dirname, `../../fixtures/echoes/${filename}.zip`));
   });
 });
