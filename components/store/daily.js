@@ -19,10 +19,16 @@ module.exports = () => {
     const insertOne = collection => async payload => {
       const dataToInsert = JSON.stringify(payload);
       logger.info(`${collection.namespace} | Inserting new document: ${dataToInsert}`);
-      const { ops, insertedCount } = await collection.insertOne({ ...payload, date_sent: new Date() });
+      const { ops, insertedCount } = await collection.insertOne({ ...payload, retries: 0, date_sent: new Date() });
       if (!insertedCount) throw new Error(`${collection.namespace} | Could not save data: ${dataToInsert}`);
       return ops[0];
     };
+    const updateOne = collection => async payload => {
+      const { _id } = payload;
+      const { value } = await collection.findOneAndUpdate({ _id }, { $set: payload }, { returnOriginal: false });
+      return value;
+    };
+
     const deleteOneByFilename = collection => async filename => {
       logger.info(`${collection.namespace} | Removing one document with filename: ${filename}`);
       const { deletedCount } = await collection.deleteOne({ filename });
@@ -43,6 +49,9 @@ module.exports = () => {
     const insertOneSuccess = insertOne(successCollection);
     const insertOneFail = insertOne(failCollection);
 
+    const updateOneSuccess = updateOne(successCollection);
+    const updateOneFail = updateOne(failCollection);
+
     const deleteOneSuccessByFilename = deleteOneByFilename(successCollection);
     const deleteOneFailByFilename = deleteOneByFilename(failCollection);
 
@@ -56,6 +65,8 @@ module.exports = () => {
       getFailByFilename,
       insertOneSuccess,
       insertOneFail,
+      updateOneSuccess,
+      updateOneFail,
       deleteOneSuccessByFilename,
       deleteOneFailByFilename,
       deleteAllSuccess,
