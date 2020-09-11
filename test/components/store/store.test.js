@@ -27,6 +27,7 @@ describe('Store component tests', () => {
         filename,
         statistics,
         date_sent: expect.any(Date),
+        retries: 0,
       };
 
       const result = await store.daily.insertOneSuccess({
@@ -48,6 +49,7 @@ describe('Store component tests', () => {
         filename,
         statistics,
         date_sent: expect.any(Date),
+        retries: 0,
       };
 
       const result = await store.daily.insertOneFail({
@@ -59,7 +61,67 @@ describe('Store component tests', () => {
     });
   });
 
+  describe('updateOne tests', () => {
+    test('should not update a document in success collection', async () => {
+      const filename = '2020-08-25';
+      const statistics = {
+        gnuplot: '128',
+        screenshots: '100',
+        stats: '80',
+      };
+      const result = await store.daily.updateOneSuccess({ filename, statistics, retries: 1 });
+      expect(result).toBeNull();
+    });
+
+    test('should not update a document in fail collection', async () => {
+      const filename = '2020-08-25';
+      const statistics = {
+        gnuplot: '128',
+        screenshots: '100',
+        stats: '80',
+      };
+      const result = await store.daily.updateOneFail({ filename, statistics, retries: 1 });
+      expect(result).toBeNull();
+    });
+
+    test('should update one document in success collection', async () => {
+      const filename = '2020-08-25';
+      const statistics = {
+        gnuplot: '128',
+        screenshots: '100',
+        stats: '80',
+      };
+      const expectedResult = {
+        filename,
+        statistics,
+        date_sent: expect.any(Date),
+        retries: 1,
+      };
+
+      const savedResult = await store.daily.insertOneSuccess({
+        filename,
+        statistics,
+      });
+
+      const result = await store.daily.updateOneSuccess({ ...savedResult, retries: 1 });
+      expect(result._id).toBeDefined();
+      expect(result).toMatchObject(expectedResult);
+    });
+  });
+
   describe('getOneByFilename tests', () => {
+    test('should not get an unexisting document by filename in success collection', async () => {
+      const filename = '2020-08-25';
+      const result = await store.daily.getSuccessByFilename(filename);
+      expect(result).toBeNull();
+    });
+
+    test('should not get an unexisting document by filename in fail collection', async () => {
+      const filename = '2020-08-25';
+      const result = await store.daily.getFailByFilename(filename);
+      expect(result).toBeNull();
+    });
+
     test('should get a document by filename in success collection', async () => {
       const filename = '2020-08-25';
       const statistics = {
