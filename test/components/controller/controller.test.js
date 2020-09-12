@@ -2,22 +2,30 @@ const fs = require('fs-extra');
 const path = require('path');
 const system = require('../../../system');
 
-describe('Archiver component tests', () => {
+const slackBotMock = require('../../mocks/slackBotMock');
+
+describe('Controller component tests', () => {
   const sys = system();
   let controller;
   let store;
   let archiver;
+  let slackBot;
   let insertOneSuccessSpy;
   let insertOneFailSpy;
   let compressFileSpy;
   let deleteFileSpy;
+  let postMessageSpy;
 
   beforeAll(async () => {
-    ({ controller, store, archiver } = await sys.start());
+    sys.set('slackBot', slackBotMock());
+    ({
+      controller, store, archiver, slackBot,
+    } = await sys.start());
     insertOneSuccessSpy = jest.spyOn(store.daily, 'insertOneSuccess');
     insertOneFailSpy = jest.spyOn(store.daily, 'insertOneFail');
     compressFileSpy = jest.spyOn(archiver, 'compressFile');
     deleteFileSpy = jest.spyOn(archiver, 'deleteFile');
+    postMessageSpy = jest.spyOn(slackBot, 'postMessage');
   });
 
   afterEach(async () => {
@@ -48,6 +56,7 @@ describe('Archiver component tests', () => {
 
       expect(insertOneSuccessSpy).not.toHaveBeenCalled();
       expect(insertOneFailSpy).toHaveBeenCalledWith({ filename, status: 'missing' });
+      expect(postMessageSpy).toHaveBeenCalled();
 
       const [savedFail] = await store.daily.getAllFail();
       expect(savedFail).toMatchObject(expectedSavedDocument);
@@ -89,6 +98,7 @@ describe('Archiver component tests', () => {
       expect(insertOneSuccessSpy).toHaveBeenCalledWith({ filename, status: 'compressed', statistics });
       expect(compressFileSpy).toHaveBeenCalledWith(filename);
       expect(deleteFileSpy).toHaveBeenCalledWith(filename);
+      expect(postMessageSpy).not.toHaveBeenCalled();
 
       const [savedSuccess] = await store.daily.getAllSuccess();
       expect(savedSuccess).toMatchObject(expectedSavedDocument);
