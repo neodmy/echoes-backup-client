@@ -19,6 +19,10 @@ module.exports = {
   archiver: {
     sourceDir: process.env.ECHOES_SOURCE_DIRECTORY || 'echoes/Fuenlabrada/2020-09-02',
   },
+  slack: {
+    token: process.env.SLACK_TOKEN,
+    channel: process.env.SLACK_CHANNEL,
+  },
   routes: {
     admin: {
       swaggerOptions: {
