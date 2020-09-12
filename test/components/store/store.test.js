@@ -26,7 +26,7 @@ describe('Store component tests', () => {
       const expectedResult = {
         filename,
         statistics,
-        date_sent: expect.any(Date),
+        date: expect.any(Date),
         retries: 0,
       };
 
@@ -48,7 +48,7 @@ describe('Store component tests', () => {
       const expectedResult = {
         filename,
         statistics,
-        date_sent: expect.any(Date),
+        date: expect.any(Date),
         retries: 0,
       };
 
@@ -94,7 +94,7 @@ describe('Store component tests', () => {
       const expectedResult = {
         filename,
         statistics,
-        date_sent: expect.any(Date),
+        date: expect.any(Date),
         retries: 1,
       };
 
@@ -132,7 +132,7 @@ describe('Store component tests', () => {
       const expectedResult = {
         filename,
         statistics,
-        date_sent: expect.any(Date),
+        date: expect.any(Date),
       };
 
       const { _id: savedId } = await store.daily.insertOneSuccess({ filename, statistics });
@@ -152,7 +152,7 @@ describe('Store component tests', () => {
       const expectedResult = {
         filename,
         statistics,
-        date_sent: expect.any(Date),
+        date: expect.any(Date),
       };
 
       const { _id: savedId } = await store.daily.insertOneFail({ filename, statistics });
@@ -176,11 +176,11 @@ describe('Store component tests', () => {
         {
           filename: filename1,
           statistics,
-          date_sent: expect.any(Date),
+          date: expect.any(Date),
         }, {
           filename: filename2,
           statistics,
-          date_sent: expect.any(Date),
+          date: expect.any(Date),
         }];
 
       await store.daily.insertOneSuccess({ filename: filename1, statistics });
@@ -202,11 +202,11 @@ describe('Store component tests', () => {
         {
           filename: filename1,
           statistics,
-          date_sent: expect.any(Date),
+          date: expect.any(Date),
         }, {
           filename: filename2,
           statistics,
-          date_sent: expect.any(Date),
+          date: expect.any(Date),
         }];
 
       await store.daily.insertOneFail({ filename: filename1, statistics });
