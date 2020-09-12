@@ -19,7 +19,7 @@ module.exports = () => {
     const insertOne = collection => async payload => {
       const dataToInsert = JSON.stringify(payload);
       logger.info(`${collection.namespace} | Inserting new document: ${dataToInsert}`);
-      const { ops, insertedCount } = await collection.insertOne({ ...payload, retries: 0, date_sent: new Date() });
+      const { ops, insertedCount } = await collection.insertOne({ ...payload, retries: 0, date: new Date() });
       if (!insertedCount) throw new Error(`${collection.namespace} | Could not save data: ${dataToInsert}`);
       return ops[0];
     };
