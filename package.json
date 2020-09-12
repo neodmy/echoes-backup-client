@@ -47,6 +47,7 @@
     "cross-env": "^7.0.2",
     "debug": "^4.1.1",
     "express-swagger-generator": "^1.1.15",
+    "fs-extra": "^9.0.1",
     "hogan.js": "^3.0.2",
     "make-manifest": "^1.0.1",
     "moment": "^2.27.0",

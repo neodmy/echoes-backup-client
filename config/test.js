@@ -3,6 +3,6 @@ const path = require('path');
 module.exports = {
   logger: { transport: null },
   archiver: {
-    sourceDir: path.join(__dirname, '../test/fixtures/echoes/'),
+    sourceDir: path.join(__dirname, '../test/fixtures/temp/echoes'),
   },
 };
