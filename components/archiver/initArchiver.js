@@ -1,5 +1,5 @@
 const debug = require('debug')('service:archiver');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const archiver = require('archiver');
 
@@ -34,7 +34,7 @@ module.exports = () => {
     const compressFile = filename => new Promise((resolve, reject) => {
       try {
         const sourceFilePath = path.join(sourceDir, filename);
-        if (!fs.existsSync(sourceFilePath)) return reject(new Error(`File ${sourceFilePath} does not exists`));
+        if (!fs.existsSync(sourceFilePath)) return reject(new Error(`File ${sourceFilePath} does not exist`));
 
         const statistics = getStatistics(sourceFilePath);
         const output = fs.createWriteStream(`${sourceFilePath}.zip`);
@@ -58,8 +58,14 @@ module.exports = () => {
       }
     });
 
+    const deleteFile = filename => {
+      const sourceFilePath = path.join(sourceDir, filename);
+      fs.removeSync(sourceFilePath);
+    };
+
     return {
       compressFile,
+      deleteFile,
     };
   };
 
