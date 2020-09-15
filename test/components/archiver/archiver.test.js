@@ -22,8 +22,9 @@ describe('Archiver component tests', () => {
   describe('compressfile', () => {
     test('should throw an error if the file does not exist', async () => {
       const fileName = 'not_a_file';
+      const localDir = path.join(__dirname, '..', '..', 'fixtures', 'temp', 'echoes', fileName);
       try {
-        await archiver.compressFile(fileName);
+        await archiver.compressFile(localDir);
       } catch (error) {
         expect(error).toBeDefined();
         expect(error.message).toEqual(expect.stringContaining(`${fileName} does not exist`));
@@ -36,7 +37,7 @@ describe('Archiver component tests', () => {
       const copiedFixture = path.join(__dirname, `../../fixtures/temp/echoes/${filename}`);
       fs.copySync(originalFixture, copiedFixture);
 
-      const result = await archiver.compressFile(filename);
+      const result = await archiver.compressFile(copiedFixture);
       const expectResult = [
         { '/gnuplot/specs/fakes': 1 },
         { '/gnuplot/specs/overdense': 1 },
@@ -72,7 +73,7 @@ describe('Archiver component tests', () => {
       let createdFileExists = fs.existsSync(copiedFixture);
       expect(createdFileExists).toBe(true);
 
-      archiver.deleteFile(filename);
+      archiver.deleteFile(copiedFixture);
 
       createdFileExists = fs.existsSync(copiedFixture);
       expect(createdFileExists).toBe(false);
@@ -86,7 +87,7 @@ describe('Archiver component tests', () => {
       let createdFileExists = fs.existsSync(tempFilePath);
       expect(createdFileExists).toBe(true);
 
-      archiver.deleteFile(filename);
+      archiver.deleteFile(tempFilePath);
 
       createdFileExists = fs.existsSync(tempFilePath);
       expect(createdFileExists).toBe(false);
