@@ -23,6 +23,17 @@ module.exports = {
     token: process.env.SLACK_TOKEN,
     channel: process.env.SLACK_CHANNEL,
   },
+  sftp: {
+    hostname: process.env.SFTP_HOSTNAME,
+    port: process.env.SFTP_PORT,
+    username: process.env.SFTP_USERNAME,
+    password: process.env.SFTP_PASSWORD,
+  },
+  controller: {
+    clientId: process.env.CLIENT_ID,
+    remoteDir: process.env.REMOTE_DIRECTORY,
+    localDir: process.env.ECHOES_SOURCE_DIRECTORY,
+  },
   routes: {
     admin: {
       swaggerOptions: {
