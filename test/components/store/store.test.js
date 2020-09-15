@@ -12,8 +12,8 @@ describe('Store component tests', () => {
   });
 
   afterEach(async () => {
-    await store.daily.deleteAllSuccess();
-    await store.daily.deleteAllFail();
+    await store.deleteAllSuccess();
+    await store.deleteAllFail();
   });
 
   afterAll(() => sys.stop());
@@ -33,7 +33,7 @@ describe('Store component tests', () => {
         retries: 0,
       };
 
-      const result = await store.daily.insertOneSuccess({
+      const result = await store.insertOneSuccess({
         filename,
         statistics,
       });
@@ -55,7 +55,7 @@ describe('Store component tests', () => {
         retries: 0,
       };
 
-      const result = await store.daily.insertOneFail({
+      const result = await store.insertOneFail({
         filename,
         statistics,
       });
@@ -72,7 +72,7 @@ describe('Store component tests', () => {
         screenshots: '100',
         stats: '80',
       };
-      const result = await store.daily.updateOneSuccess({ filename, statistics, retries: 1 });
+      const result = await store.updateOneSuccess({ filename, statistics, retries: 1 });
       expect(result).toBeNull();
     });
 
@@ -83,7 +83,7 @@ describe('Store component tests', () => {
         screenshots: '100',
         stats: '80',
       };
-      const result = await store.daily.updateOneFail({ filename, statistics, retries: 1 });
+      const result = await store.updateOneFail({ filename, statistics, retries: 1 });
       expect(result).toBeNull();
     });
 
@@ -101,12 +101,12 @@ describe('Store component tests', () => {
         retries: 1,
       };
 
-      const savedResult = await store.daily.insertOneSuccess({
+      const savedResult = await store.insertOneSuccess({
         filename,
         statistics,
       });
 
-      const result = await store.daily.updateOneSuccess({ ...savedResult, retries: 1 });
+      const result = await store.updateOneSuccess({ ...savedResult, retries: 1 });
       expect(result._id).toBeDefined();
       expect(result).toMatchObject(expectedResult);
     });
@@ -115,13 +115,13 @@ describe('Store component tests', () => {
   describe('getOneByFilename tests', () => {
     test('should not get an unexisting document by filename in success collection', async () => {
       const filename = '2020-08-25';
-      const result = await store.daily.getSuccessByFilename(filename);
+      const result = await store.getSuccessByFilename(filename);
       expect(result).toBeNull();
     });
 
     test('should not get an unexisting document by filename in fail collection', async () => {
       const filename = '2020-08-25';
-      const result = await store.daily.getFailByFilename(filename);
+      const result = await store.getFailByFilename(filename);
       expect(result).toBeNull();
     });
 
@@ -138,9 +138,9 @@ describe('Store component tests', () => {
         date: expect.any(Date),
       };
 
-      const { _id: savedId } = await store.daily.insertOneSuccess({ filename, statistics });
+      const { _id: savedId } = await store.insertOneSuccess({ filename, statistics });
 
-      const result = await store.daily.getSuccessByFilename(filename);
+      const result = await store.getSuccessByFilename(filename);
       expect(result._id).toEqual(savedId);
       expect(result).toMatchObject(expectedResult);
     });
@@ -158,9 +158,9 @@ describe('Store component tests', () => {
         date: expect.any(Date),
       };
 
-      const { _id: savedId } = await store.daily.insertOneFail({ filename, statistics });
+      const { _id: savedId } = await store.insertOneFail({ filename, statistics });
 
-      const result = await store.daily.getFailByFilename(filename);
+      const result = await store.getFailByFilename(filename);
       expect(result._id).toEqual(savedId);
       expect(result).toMatchObject(expectedResult);
     });
@@ -186,10 +186,10 @@ describe('Store component tests', () => {
           date: expect.any(Date),
         }];
 
-      await store.daily.insertOneSuccess({ filename: filename1, statistics });
-      await store.daily.insertOneSuccess({ filename: filename2, statistics });
+      await store.insertOneSuccess({ filename: filename1, statistics });
+      await store.insertOneSuccess({ filename: filename2, statistics });
 
-      const result = await store.daily.getAllSuccess();
+      const result = await store.getAllSuccess();
       expect(result).toMatchObject(expectedResult);
     });
 
@@ -212,10 +212,10 @@ describe('Store component tests', () => {
           date: expect.any(Date),
         }];
 
-      await store.daily.insertOneFail({ filename: filename1, statistics });
-      await store.daily.insertOneFail({ filename: filename2, statistics });
+      await store.insertOneFail({ filename: filename1, statistics });
+      await store.insertOneFail({ filename: filename2, statistics });
 
-      const result = await store.daily.getAllFail();
+      const result = await store.getAllFail();
       expect(result).toMatchObject(expectedResult);
     });
   });
@@ -230,13 +230,13 @@ describe('Store component tests', () => {
         stats: '80',
       };
 
-      await store.daily.insertOneSuccess({ filename: filename1, statistics });
-      await store.daily.insertOneSuccess({ filename: filename2, statistics });
+      await store.insertOneSuccess({ filename: filename1, statistics });
+      await store.insertOneSuccess({ filename: filename2, statistics });
 
-      const result = await store.daily.deleteOneSuccessByFilename(filename1);
+      const result = await store.deleteOneSuccessByFilename(filename1);
       expect(result).toBe(1);
 
-      const remainingDocuments = await store.daily.getAllSuccess();
+      const remainingDocuments = await store.getAllSuccess();
       expect(remainingDocuments).toHaveLength(1);
     });
 
@@ -249,13 +249,13 @@ describe('Store component tests', () => {
         stats: '80',
       };
 
-      await store.daily.insertOneFail({ filename: filename1, statistics });
-      await store.daily.insertOneFail({ filename: filename2, statistics });
+      await store.insertOneFail({ filename: filename1, statistics });
+      await store.insertOneFail({ filename: filename2, statistics });
 
-      const result = await store.daily.deleteOneFailByFilename(filename1);
+      const result = await store.deleteOneFailByFilename(filename1);
       expect(result).toBe(1);
 
-      const remainingDocuments = await store.daily.getAllFail();
+      const remainingDocuments = await store.getAllFail();
       expect(remainingDocuments).toHaveLength(1);
     });
   });
@@ -270,12 +270,12 @@ describe('Store component tests', () => {
         stats: '80',
       };
 
-      await store.daily.insertOneSuccess({ filename: filename1, statistics });
-      await store.daily.insertOneSuccess({ filename: filename2, statistics });
+      await store.insertOneSuccess({ filename: filename1, statistics });
+      await store.insertOneSuccess({ filename: filename2, statistics });
 
-      await store.daily.deleteAllSuccess();
+      await store.deleteAllSuccess();
 
-      const remainingDocuments = await store.daily.getAllSuccess();
+      const remainingDocuments = await store.getAllSuccess();
       expect(remainingDocuments).toHaveLength(0);
     });
 
@@ -288,12 +288,12 @@ describe('Store component tests', () => {
         stats: '80',
       };
 
-      await store.daily.insertOneFail({ filename: filename1, statistics });
-      await store.daily.insertOneFail({ filename: filename2, statistics });
+      await store.insertOneFail({ filename: filename1, statistics });
+      await store.insertOneFail({ filename: filename2, statistics });
 
-      await store.daily.deleteAllFail();
+      await store.deleteAllFail();
 
-      const remainingDocuments = await store.daily.getAllFail();
+      const remainingDocuments = await store.getAllFail();
       expect(remainingDocuments).toHaveLength(0);
     });
   });

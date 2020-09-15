@@ -4,11 +4,8 @@ const path = require('path');
 const archiver = require('archiver');
 
 module.exports = () => {
-  const start = async ({ config, logger }) => {
-    const { sourceDir } = config;
-    const initializingMessage = `Initializing archiver component with source directory ${sourceDir}`;
-    logger.info(`${initializingMessage}`);
-    debug(`${initializingMessage}`);
+  const start = async ({ logger }) => {
+    debug('Initializing archiver component');
 
     const getStatistics = filePath => {
       const statisticsMap = new Map();
@@ -30,37 +27,36 @@ module.exports = () => {
       return Array.from(statisticsMap, ([absolutePath, value]) => ({ [absolutePath.replace(filePath, '')]: value }));
     };
 
-    // eslint-disable-next-line consistent-return
-    const compressFile = filename => new Promise((resolve, reject) => {
+    const compressFile = filePath => new Promise((resolve, reject) => {
       try {
-        const sourceFilePath = path.join(sourceDir, filename);
-        if (!fs.existsSync(sourceFilePath)) return reject(new Error(`File ${sourceFilePath} does not exist`));
+        if (!fs.existsSync(filePath)) return reject(new Error(`File ${filePath} does not exist`));
 
-        const statistics = getStatistics(sourceFilePath);
-        const output = fs.createWriteStream(`${sourceFilePath}.zip`);
+        const statistics = getStatistics(filePath);
+        const output = fs.createWriteStream(`${filePath}.zip`);
         const archive = archiver('zip');
 
         output.on('close', () => {
           const sizeInMB = Math.round(((archive.pointer() / 100000) + Number.EPSILON) * 100) / 100;
-          logger.info(`File ${filename} compressed. Total MB ${sizeInMB}`);
+          logger.info(`File ${filePath} compressed. Total MB ${sizeInMB}`);
         });
         archive.on('error', err => {
           reject(err);
         });
 
         archive.pipe(output);
-        archive.directory(sourceFilePath, false);
-        archive.finalize()
+        archive.directory(filePath, false);
+        return archive.finalize()
           .then(() => resolve(statistics))
           .catch(err => reject(err));
       } catch (error) {
         reject(error);
+        throw error;
       }
     });
 
-    const deleteFile = filename => {
-      const sourceFilePath = path.join(sourceDir, filename);
-      fs.removeSync(sourceFilePath);
+    const deleteFile = filePath => {
+      logger.info(`Removing file: ${filePath}`);
+      fs.removeSync(filePath);
     };
 
     return {
