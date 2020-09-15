@@ -21,16 +21,16 @@ describe('Controller component tests', () => {
     ({
       controller, store, archiver, slackBot,
     } = await sys.start());
-    insertOneSuccessSpy = jest.spyOn(store.daily, 'insertOneSuccess');
-    insertOneFailSpy = jest.spyOn(store.daily, 'insertOneFail');
+    insertOneSuccessSpy = jest.spyOn(store, 'insertOneSuccess');
+    insertOneFailSpy = jest.spyOn(store, 'insertOneFail');
     compressFileSpy = jest.spyOn(archiver, 'compressFile');
     deleteFileSpy = jest.spyOn(archiver, 'deleteFile');
     postMessageSpy = jest.spyOn(slackBot, 'postMessage');
   });
 
   afterEach(async () => {
-    await store.daily.deleteAllSuccess();
-    await store.daily.deleteAllFail();
+    await store.deleteAllSuccess();
+    await store.deleteAllFail();
     jest.clearAllMocks();
   });
 
@@ -47,18 +47,18 @@ describe('Controller component tests', () => {
 
     let err;
     try {
-      await controller.daily.handleTask(filename);
+      await controller.handleTask(filename);
     } catch (error) {
       err = error;
     } finally {
       expect(err).toBeDefined();
-      expect(err.message).toEqual(expect.stringContaining('/not_a_file does not exist'));
+      expect(err.message).toEqual(expect.stringContaining('not_a_file does not exist'));
 
       expect(insertOneSuccessSpy).not.toHaveBeenCalled();
       expect(insertOneFailSpy).toHaveBeenCalledWith({ filename, status: 'missing' });
       expect(postMessageSpy).toHaveBeenCalled();
 
-      const [savedFail] = await store.daily.getAllFail();
+      const [savedFail] = await store.getAllFail();
       expect(savedFail).toMatchObject(expectedSavedDocument);
     }
   });
@@ -88,7 +88,7 @@ describe('Controller component tests', () => {
 
     let err;
     try {
-      await controller.daily.handleTask(filename);
+      await controller.handleTask(filename);
     } catch (error) {
       err = error;
     } finally {
@@ -96,11 +96,11 @@ describe('Controller component tests', () => {
 
       expect(insertOneFailSpy).not.toHaveBeenCalled();
       expect(insertOneSuccessSpy).toHaveBeenCalledWith({ filename, status: 'compressed', statistics });
-      expect(compressFileSpy).toHaveBeenCalledWith(filename);
-      expect(deleteFileSpy).toHaveBeenCalledWith(filename);
+      expect(compressFileSpy).toHaveBeenCalledWith(copiedFixture);
+      expect(deleteFileSpy).toHaveBeenCalledWith(copiedFixture);
       expect(postMessageSpy).not.toHaveBeenCalled();
 
-      const [savedSuccess] = await store.daily.getAllSuccess();
+      const [savedSuccess] = await store.getAllSuccess();
       expect(savedSuccess).toMatchObject(expectedSavedDocument);
 
       fs.removeSync(`${copiedFixture}.zip`);
