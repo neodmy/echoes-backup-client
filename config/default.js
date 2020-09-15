@@ -8,16 +8,11 @@ module.exports = {
     options: { useUnifiedTopology: true },
   },
   store: {
-    daily: {
-      collections: {
-        success: process.env.SUCCESS_COLLECTION_NAME || 'success',
-        fail: process.env.FAIL_COLLECTION_NAME || 'fail',
-      },
-      databaseName: process.env.DAILY_DATABASE_NAME || 'echoes-backup',
+    collections: {
+      success: process.env.SUCCESS_COLLECTION_NAME || 'success',
+      fail: process.env.FAIL_COLLECTION_NAME || 'fail',
     },
-  },
-  archiver: {
-    sourceDir: process.env.ECHOES_SOURCE_DIRECTORY || 'echoes/Fuenlabrada/2020-09-02',
+    databaseName: process.env.DAILY_DATABASE_NAME || 'echoes-backup',
   },
   slack: {
     token: process.env.SLACK_TOKEN,
