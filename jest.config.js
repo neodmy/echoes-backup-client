@@ -2,6 +2,7 @@ const { defaults } = require('jest-config');
 require('./test/env');
 
 module.exports = {
+  testTimeout: 30000,
   testEnvironment: 'node',
   moduleFileExtensions: [...defaults.moduleFileExtensions, 'js'],
   testPathIgnorePatterns: ['dist', 'config'],
