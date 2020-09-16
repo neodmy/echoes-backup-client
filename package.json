@@ -8,8 +8,8 @@
     "start": "node index.js",
     "test:report": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit --coverage",
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit --reporters=default",
-    "infra:up": "bash -c 'docker-compose --file docker/test/docker-compose.yml --project-name mongo-echoes-backup-client-test up -d --force-recreate --build'",
-    "infra:down": "bash -c 'docker-compose --file docker/test/docker-compose.yml --project-name mongo-echoes-backup-client-test stop'",
+    "infra:up": "bash -c 'docker-compose --file docker/test/docker-compose.yml --project-name echoes-backup-client-test up -d --force-recreate --build'",
+    "infra:down": "bash -c 'docker-compose --file docker/test/docker-compose.yml --project-name echoes-backup-client-test stop'",
     "lint": "eslint .",
     "manifest": "node_modules/make-manifest/bin/make-manifest",
     "gitLog": "node gitLogFormatter/index.js"
