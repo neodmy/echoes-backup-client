@@ -8,21 +8,24 @@ module.exports = () => {
 
     const client = new Client();
 
-    const uploadFile = async ({ filename, localPath, remotePath }) => {
+    const connect = async () => {
       try {
         await client.connect(config);
       } catch (error) {
         logger.error(`Error connecting SFTP server | Error ${error.stack}`);
         throw error;
       }
+    };
+
+    const uploadFile = async ({ filename, localPath, remotePath }) => {
+      await connect();
 
       try {
         let result = await client.mkdir(remotePath, true);
         logger.info(`Trying to create remote directory in server | Result ${result}`);
 
-        result = await client.fastPut(path.join(__dirname, localPath, filename), path.join(remotePath, filename));
+        result = await client.fastPut(path.join(localPath, filename), path.join(remotePath, filename));
         logger.info(`Uploading file ${filename} to server | Result ${result}`);
-
         return result;
       } catch (error) {
         logger.error(`Error uploading file to SFTP server | Error ${error.stack}`);
@@ -32,7 +35,37 @@ module.exports = () => {
       }
     };
 
-    return { uploadFile };
+    const removeDir = async ({ remotePath }) => {
+      await connect();
+
+      try {
+        const result = await client.rmdir(remotePath, true);
+        logger.info(`Deleting directory ${remotePath} in server | Result ${result}`);
+        return result;
+      } catch (error) {
+        logger.error(`Error deleting directory in SFTP server | Error ${error.stack}`);
+        throw error;
+      } finally {
+        await client.end();
+      }
+    };
+
+    const removeFile = async ({ filename, remotePath }) => {
+      await connect();
+
+      try {
+        const result = await client.delete(path.join(remotePath, filename));
+        logger.info(`Deleting file ${remotePath} in server | Result ${result}`);
+        return result;
+      } catch (error) {
+        logger.error(`Error deleting file in SFTP server | Error ${error.stack}`);
+        throw error;
+      } finally {
+        await client.end();
+      }
+    };
+
+    return { uploadFile, removeDir, removeFile };
   };
 
   return { start };

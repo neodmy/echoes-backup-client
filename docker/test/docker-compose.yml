@@ -1,6 +1,12 @@
 version: "3.5"
 
 services:
+  sftp:
+    build: ./sftp
+    container_name: sftp-echoes-backup-client
+    ports:
+        - "2222:22"
+    command: username:password:::/echoes
   mongo:
     image: mongo:3.6
     container_name: mongo-echoes-backup-client
