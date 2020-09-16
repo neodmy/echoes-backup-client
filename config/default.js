@@ -19,10 +19,10 @@ module.exports = {
     channel: process.env.SLACK_CHANNEL,
   },
   sftp: {
-    hostname: process.env.SFTP_HOSTNAME,
-    port: process.env.SFTP_PORT,
-    username: process.env.SFTP_USERNAME,
-    password: process.env.SFTP_PASSWORD,
+    hostname: process.env.SFTP_HOSTNAME || 'localhost',
+    port: process.env.SFTP_PORT || 2222,
+    username: process.env.SFTP_USERNAME || 'username',
+    password: process.env.SFTP_PASSWORD || 'password',
   },
   controller: {
     clientId: process.env.CLIENT_ID,
