@@ -54,14 +54,25 @@ module.exports = () => {
       }
     });
 
-    const deleteFile = filePath => {
+    const deleteFile = filePath => new Promise((resolve, reject) => {
       logger.info(`Removing file: ${filePath}`);
-      fs.removeSync(filePath);
-    };
+      fs.remove(filePath, err => {
+        if (err) return reject(new Error(`Error deleting file | File ${filePath} | ${err}`));
+        return resolve();
+      });
+    });
+
+    const getDirectoryContent = dirPath => new Promise((resolve, reject) => {
+      fs.readdir(dirPath, (err, files) => {
+        if (err) return reject(new Error(`Error getting content of directory | Directory ${dirPath} | ${err}`));
+        return resolve(files);
+      });
+    });
 
     return {
       compressFile,
       deleteFile,
+      getDirectoryContent,
     };
   };
 
