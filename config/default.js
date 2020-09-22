@@ -26,8 +26,9 @@ module.exports = {
   },
   controller: {
     clientId: process.env.CLIENT_ID,
-    remoteDir: process.env.REMOTE_DIRECTORY,
-    localDir: process.env.ECHOES_SOURCE_DIRECTORY,
+    remotePath: process.env.REMOTE_DIRECTORY || 'echoes/temp',
+    localPath: process.env.ECHOES_SOURCE_DIRECTORY,
+    removalOffset: process.env.REMOVAL_OFFSET || 21,
   },
   routes: {
     admin: {

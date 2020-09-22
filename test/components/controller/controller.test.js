@@ -1,109 +1,150 @@
-const fs = require('fs-extra');
-const path = require('path');
 const system = require('../../../system');
 
 const slackBotMock = require('../../mocks/slackBotMock');
+const sftpMock = require('../../mocks/sftpMock');
+const archiverMock = require('../../mocks/archiverMock');
+const storeMock = require('../../mocks/storeMock');
+const compressorMock = require('../../mocks/compressorMock');
+const uploaderMock = require('../../mocks/uploaderMock');
+
+const {
+  controller: { removalOffset },
+} = require('../../../config/default');
 
 describe('Controller component tests', () => {
   const sys = system();
   let controller;
-  let store;
+  let uploader;
+  let compressor;
   let archiver;
-  let slackBot;
-  let insertOneSuccessSpy;
-  let insertOneFailSpy;
-  let compressFileSpy;
-  let deleteFileSpy;
-  let postMessageSpy;
 
   beforeAll(async () => {
     sys.set('slackBot', slackBotMock());
+    sys.set('sftp', sftpMock());
+    sys.set('archiver', archiverMock());
+    sys.set('store', storeMock());
+    sys.set('compressor', compressorMock());
+    sys.set('uploader', uploaderMock());
     ({
-      controller, store, archiver, slackBot,
+      controller, archiver, uploader, compressor,
     } = await sys.start());
-    insertOneSuccessSpy = jest.spyOn(store, 'insertOneSuccess');
-    insertOneFailSpy = jest.spyOn(store, 'insertOneFail');
-    compressFileSpy = jest.spyOn(archiver, 'compressFile');
-    deleteFileSpy = jest.spyOn(archiver, 'deleteFile');
-    postMessageSpy = jest.spyOn(slackBot, 'postMessage');
   });
 
-  afterEach(async () => {
-    await store.deleteAllSuccess();
-    await store.deleteAllFail();
-    jest.clearAllMocks();
-  });
+  afterEach(() => jest.clearAllMocks());
 
   afterAll(() => sys.stop());
 
-  test('should not complete the task when the file to compress does not exist', async () => {
-    const filename = 'not_a_file';
-    const expectedSavedDocument = {
-      filename,
-      status: 'missing',
-      retries: 0,
-      date: expect.any(Date),
-    };
+  const getFilename = (shouldBeRemoved = false) => {
+    const today = new Date();
+    const offset = shouldBeRemoved ? removalOffset + 1 : 0;
+    today.setDate(today.getDate() - offset);
+    return today.toISOString().split('T')[0];
+  };
 
-    let err;
-    try {
-      await controller.handleTask(filename);
-    } catch (error) {
-      err = error;
-    } finally {
-      expect(err).toBeDefined();
-      expect(err.message).toEqual(expect.stringContaining('not_a_file does not exist'));
+  describe('handleTask', () => {
+    test('should handle two files to compress and upload', async () => {
+      const filename = getFilename();
 
-      expect(insertOneSuccessSpy).not.toHaveBeenCalled();
-      expect(insertOneFailSpy).toHaveBeenCalledWith({ filename, status: 'missing' });
-      expect(postMessageSpy).toHaveBeenCalled();
+      archiver.getDirectoryContent.mockResolvedValueOnce([filename, filename]);
 
-      const [savedFail] = await store.getAllFail();
-      expect(savedFail).toMatchObject(expectedSavedDocument);
-    }
-  });
+      let err;
+      try {
+        await controller.handleTask();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
 
-  test('should complete the task when the file to compress exists', async () => {
-    const filename = '2020-09-10';
-    const statistics = [
-      { '/gnuplot/specs/fakes': 1 },
-      { '/gnuplot/specs/overdense': 1 },
-      { '/gnuplot/specs': 1 },
-      { '/gnuplot/specs/underdense': 1 },
-      { '/screenshots/fakes': 1 },
-      { '/screenshots/overdense': 1 },
-      { '/screenshots/underdense': 1 },
-      { '/stats': 1 },
-    ];
-    const expectedSavedDocument = {
-      filename,
-      status: 'compressed',
-      retries: 0,
-      statistics,
-      date: expect.any(Date),
-    };
-    const originalFixture = path.join(__dirname, '../../fixtures/original/echoes/2020-09-10');
-    const copiedFixture = path.join(__dirname, `../../fixtures/temp/echoes/${filename}`);
-    fs.copySync(originalFixture, copiedFixture);
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
 
-    let err;
-    try {
-      await controller.handleTask(filename);
-    } catch (error) {
-      err = error;
-    } finally {
-      expect(err).toBeUndefined();
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+      }
+    });
 
-      expect(insertOneFailSpy).not.toHaveBeenCalled();
-      expect(insertOneSuccessSpy).toHaveBeenCalledWith({ filename, status: 'compressed', statistics });
-      expect(compressFileSpy).toHaveBeenCalledWith(copiedFixture);
-      expect(deleteFileSpy).toHaveBeenCalledWith(copiedFixture);
-      expect(postMessageSpy).not.toHaveBeenCalled();
+    test('should handle two files to upload', async () => {
+      const filename = getFilename();
 
-      const [savedSuccess] = await store.getAllSuccess();
-      expect(savedSuccess).toMatchObject(expectedSavedDocument);
+      archiver.getDirectoryContent.mockResolvedValueOnce([`${filename}.zip`, `${filename}.zip`]);
 
-      fs.removeSync(`${copiedFixture}.zip`);
-    }
+      let err;
+      try {
+        await controller.handleTask();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(compressor.handleCompression).not.toHaveBeenCalled();
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+      }
+    });
+
+    test('should handle a file to compress and upload, and one to upload', async () => {
+      const filename = getFilename();
+
+      archiver.getDirectoryContent.mockResolvedValueOnce([filename, `${filename}.zip`]);
+
+      let err;
+      try {
+        await controller.handleTask();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(1);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+      }
+    });
+
+    test('should handle a compression failure for the first file, and compress and upload the second file', async () => {
+      const filename = getFilename();
+
+      archiver.getDirectoryContent.mockResolvedValueOnce([filename, filename]);
+      compressor.handleCompression.mockRejectedValueOnce(new Error());
+
+      let err;
+      try {
+        await controller.handleTask();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(1);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+      }
+    });
+
+    test('should handle an upload failure for the first file, and upload the second file', async () => {
+      const filename = getFilename();
+
+      archiver.getDirectoryContent.mockResolvedValueOnce([`${filename}.zip`, `${filename}.zip`]);
+      uploader.handleUpload.mockRejectedValueOnce(new Error());
+
+      let err;
+      try {
+        await controller.handleTask();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(compressor.handleCompression).not.toHaveBeenCalled();
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+      }
+    });
   });
 });
