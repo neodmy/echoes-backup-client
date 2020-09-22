@@ -59,9 +59,16 @@ describe('Archiver component tests', () => {
       const fileName = 'not_a_file';
       const tempFilePath = path.join(__dirname, `../../fixtures/temp/echoes/${fileName}`);
 
-      const createdFileExists = fs.existsSync(tempFilePath);
-      expect(createdFileExists).toBe(false);
-      archiver.deleteFile(fileName);
+      let err;
+      try {
+        const createdFileExists = fs.existsSync(tempFilePath);
+        expect(createdFileExists).toBe(false);
+        await archiver.deleteFile(fileName);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+      }
     });
 
     test('should remove a file (directory)', async () => {
@@ -73,10 +80,17 @@ describe('Archiver component tests', () => {
       let createdFileExists = fs.existsSync(copiedFixture);
       expect(createdFileExists).toBe(true);
 
-      archiver.deleteFile(copiedFixture);
+      let err;
+      try {
+        await archiver.deleteFile(copiedFixture);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
 
-      createdFileExists = fs.existsSync(copiedFixture);
-      expect(createdFileExists).toBe(false);
+        createdFileExists = fs.existsSync(copiedFixture);
+        expect(createdFileExists).toBe(false);
+      }
     });
 
     test('should remove a file (zip)', async () => {
@@ -87,10 +101,56 @@ describe('Archiver component tests', () => {
       let createdFileExists = fs.existsSync(tempFilePath);
       expect(createdFileExists).toBe(true);
 
-      archiver.deleteFile(tempFilePath);
+      let err;
+      try {
+        await archiver.deleteFile(tempFilePath);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
 
-      createdFileExists = fs.existsSync(tempFilePath);
-      expect(createdFileExists).toBe(false);
+        createdFileExists = fs.existsSync(tempFilePath);
+        expect(createdFileExists).toBe(false);
+      }
+    });
+  });
+
+  describe('getDirectoryContent', () => {
+    test('should throw if the directory does not exist', async () => {
+      const dirPath = '/not/a/valid/path';
+      let err;
+      try {
+        await archiver.getDirectoryContent(dirPath);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeDefined();
+        expect(err.message).toStrictEqual(expect.stringMatching('ENOENT: no such file or directory'));
+      }
+    });
+
+    test('should list the content of a directory', async () => {
+      const filename = '2020-09-10';
+      const fixtureDir = path.join(__dirname, '../../fixtures/temp/echoes/');
+
+      const originalFixture = path.join(__dirname, `../../fixtures/original/echoes/${filename}`);
+      const copiedFixture = path.join(fixtureDir, `${filename}`);
+      fs.createFileSync(path.join(fixtureDir, `${filename}.zip`));
+      fs.copySync(originalFixture, copiedFixture);
+
+      const expectedResult = ['2020-09-10', '2020-09-10.zip'];
+      let err;
+      let result;
+      try {
+        result = await archiver.getDirectoryContent(fixtureDir);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(result).toEqual(expectedResult);
+        fs.remove(path.join(__dirname, '../../fixtures/temp/echoes/'));
+      }
     });
   });
 });
