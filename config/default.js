@@ -3,16 +3,13 @@ module.exports = {
     host: '0.0.0.0',
     port: 4000,
   },
-  mongodb: {
+  mongo: {
     url: process.env.MONGO_CONNECTION_STRING || 'mongodb://localhost:27018',
     options: { useUnifiedTopology: true },
   },
   store: {
-    collections: {
-      success: process.env.SUCCESS_COLLECTION_NAME || 'success',
-      fail: process.env.FAIL_COLLECTION_NAME || 'fail',
-    },
-    databaseName: process.env.DAILY_DATABASE_NAME || 'echoes-backup',
+    collection: process.env.FAIL_COLLECTION_NAME || 'fail',
+    database: process.env.DAILY_DATABASE_NAME || 'echoes-backup',
   },
   slack: {
     token: process.env.SLACK_TOKEN,
