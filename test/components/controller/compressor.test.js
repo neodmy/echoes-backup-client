@@ -35,11 +35,11 @@ describe('Compressor component tests', () => {
   afterAll(() => sys.stop());
 
   describe('handleCompression', () => {
-    test('should fail when the file to compress does not exist for the first time', async () => {
+    test('should fail when the file to compress does not exist on the first try', async () => {
       const filename = 'not_a_file';
       const failStatus = 'failed_to_compress';
 
-      store.getAllFail.mockResolvedValueOnce(null);
+      store.getOne.mockResolvedValueOnce(null);
       archiver.compressFile.mockRejectedValueOnce(new Error('not_a_file does not exist'));
 
       let err;
@@ -51,19 +51,18 @@ describe('Compressor component tests', () => {
         expect(err).toBeDefined();
         expect(err.message).toEqual(expect.stringContaining('not_a_file does not exist'));
 
-        expect(store.getAllFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(archiver.compressFile).toHaveBeenCalledWith(path.join(localPath, filename));
-        expect(store.insertOneSuccess).not.toHaveBeenCalled();
 
         expect(archiver.deleteFile).not.toHaveBeenCalled();
-        expect(store.deleteOneFail).not.toHaveBeenCalled();
+        expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).toHaveBeenCalled();
-        expect(store.upsertOneFail).toHaveBeenCalledWith({ filename, status: failStatus, retries: 1 });
+        expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 1 });
       }
     });
 
-    test('should success when the file to compress exists', async () => {
+    test('should success when the file to compress exists on the first try', async () => {
       const filename = '2020-09-01';
       const statistics = [
         { '/gnuplot/specs/fakes': 1 },
@@ -75,17 +74,9 @@ describe('Compressor component tests', () => {
         { '/screenshots/underdense': 1 },
         { '/stats': 1 },
       ];
-      const successStatus = 'compressed';
 
-      store.getAllFail.mockResolvedValueOnce(null);
+      store.getOne.mockResolvedValueOnce(null);
       archiver.compressFile.mockResolvedValueOnce(statistics);
-      store.insertOneSuccess.mockResolvedValueOnce({
-        _id: expect.any(String),
-        filename,
-        status: successStatus,
-        retries: 0,
-        date: expect.any(Date),
-      });
       archiver.deleteFile.mockReturnValueOnce();
 
       let err;
@@ -96,25 +87,22 @@ describe('Compressor component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(store.getAllFail).toHaveBeenCalled();
+        expect(store.getOne).toHaveBeenCalled();
         expect(archiver.compressFile).toHaveBeenCalledWith(path.join(localPath, filename));
-        expect(store.insertOneSuccess).toHaveBeenCalledWith({
-          filename, statistics, status: successStatus, retries: 0,
-        });
 
         expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, filename));
-        expect(store.deleteOneFail).not.toHaveBeenCalled();
+        expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
-        expect(store.upsertOneFail).not.toHaveBeenCalled();
+        expect(store.upsertOne).not.toHaveBeenCalled();
       }
     });
 
-    test('should fail when the file to compress does not exits for the second time', async () => {
+    test('should fail when the file to compress does not exits on the second try', async () => {
       const filename = 'not_a_file';
       const failStatus = 'failed_to_compress';
 
-      store.getAllFail.mockResolvedValueOnce({
+      store.getOne.mockResolvedValueOnce({
         _id: expect.any(String),
         filename,
         status: failStatus,
@@ -132,19 +120,18 @@ describe('Compressor component tests', () => {
         expect(err).toBeDefined();
         expect(err.message).toEqual(expect.stringContaining('not_a_file does not exist'));
 
-        expect(store.getAllFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(archiver.compressFile).toHaveBeenCalledWith(path.join(localPath, filename));
-        expect(store.insertOneSuccess).not.toHaveBeenCalled();
 
         expect(archiver.deleteFile).not.toHaveBeenCalled();
-        expect(store.deleteOneFail).not.toHaveBeenCalled();
+        expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).toHaveBeenCalled();
-        expect(store.upsertOneFail).toHaveBeenCalledWith({ filename, status: failStatus, retries: 2 });
+        expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 2 });
       }
     });
 
-    test('should compress the file at the second time when it failed previously', async () => {
+    test('should compress the file at the second try when it failed previously', async () => {
       const filename = '2020-09-01';
       const statistics = [
         { '/gnuplot/specs/fakes': 1 },
@@ -157,9 +144,8 @@ describe('Compressor component tests', () => {
         { '/stats': 1 },
       ];
       const failStatus = 'failed_to_compress';
-      const successStatus = 'compressed';
 
-      store.getAllFail.mockResolvedValueOnce({
+      store.getOne.mockResolvedValueOnce({
         _id: expect.any(String),
         filename,
         status: failStatus,
@@ -177,17 +163,14 @@ describe('Compressor component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(store.getAllFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(archiver.compressFile).toHaveBeenCalledWith(path.join(localPath, filename));
-        expect(store.insertOneSuccess).toHaveBeenCalledWith({
-          filename, statistics, status: successStatus, retries: 1,
-        });
 
         expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, filename));
-        expect(store.deleteOneFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
 
         expect(postMessageSpy).not.toHaveBeenCalled();
-        expect(store.upsertOneFail).not.toHaveBeenCalled();
+        expect(store.upsertOne).not.toHaveBeenCalled();
       }
     });
   });
