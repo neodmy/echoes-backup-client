@@ -1,12 +1,12 @@
 const System = require('systemic');
-const initCompressionController = require('./compressionController');
-const initUploadController = require('./uploadController');
-const initTaskController = require('./taskController');
+const initCompressor = require('./compressor');
+const initUploader = require('./uploader');
+const initController = require('./controller');
 
 module.exports = new System({ name: 'controller' })
-  .add('compressor', initCompressionController())
+  .add('compressor', initCompressor())
   .dependsOn({ component: 'config', source: 'controller' }, 'logger', 'archiver', 'store', 'slackBot')
-  .add('uploader', initUploadController())
+  .add('uploader', initUploader())
   .dependsOn({ component: 'config', source: 'controller' }, 'logger', 'archiver', 'store', 'slackBot', 'sftp')
-  .add('controller', initTaskController())
-  .dependsOn('config', 'logger', 'archiver', 'compressor', 'uploader');
+  .add('controller', initController())
+  .dependsOn('config', 'logger', 'archiver', 'compressor', 'uploader', 'store');
