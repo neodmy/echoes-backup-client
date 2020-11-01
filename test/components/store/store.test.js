@@ -17,7 +17,7 @@ describe('Store component tests', () => {
 
   afterAll(() => sys.stop());
 
-  describe('upsertOne tests', () => {
+  describe('upsertOne', () => {
     test('should insert a document', async () => {
       const filename = '2020-08-25';
       const status = 'missing';
@@ -59,7 +59,7 @@ describe('Store component tests', () => {
     });
   });
 
-  describe('getOne tests', () => {
+  describe('getOne', () => {
     test('should get one document', async () => {
       const filename1 = '2020-08-25';
       const filename2 = '2020-08-26';
@@ -92,7 +92,7 @@ describe('Store component tests', () => {
     });
   });
 
-  describe('getAll tests', () => {
+  describe('getAll', () => {
     test('should get all documents in a collection', async () => {
       const filename1 = '2020-08-25';
       const filename2 = '2020-08-26';
@@ -136,7 +136,7 @@ describe('Store component tests', () => {
     });
   });
 
-  describe('deleteOne tests', () => {
+  describe('deleteOne', () => {
     test('should delete one document in collection', async () => {
       const filename1 = '2020-08-25';
       const status = 'missing';
@@ -152,7 +152,7 @@ describe('Store component tests', () => {
     });
   });
 
-  describe('deleteAll tests', () => {
+  describe('deleteAll', () => {
     test('should delete all documents in fail collection', async () => {
       const filename1 = '2020-08-25';
       const filename2 = '2020-08-26';
