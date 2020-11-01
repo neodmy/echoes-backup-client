@@ -45,11 +45,11 @@ describe('Uploader component tests', () => {
   };
 
   describe('handleUpload', () => {
-    test('should fail when the upload to SFTP server fails for the first time', async () => {
+    test('should fail when the upload to SFTP server fails on the first try', async () => {
       const filename = '2020-09-01';
       const failStatus = 'failed_to_send';
 
-      store.getAllFail.mockResolvedValueOnce(null);
+      store.getOne.mockResolvedValueOnce(null);
       sftp.uploadFile.mockRejectedValueOnce(new Error('Error uploading file to SFTP'));
 
       let err;
@@ -60,24 +60,22 @@ describe('Uploader component tests', () => {
       } finally {
         expect(err).toBeDefined();
 
-        expect(store.getAllFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
-        expect(store.insertOneSuccess).not.toHaveBeenCalled();
 
         expect(archiver.deleteFile).not.toHaveBeenCalled();
-        expect(store.deleteOneFail).not.toHaveBeenCalled();
+        expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).toHaveBeenCalled();
-        expect(store.upsertOneFail).toHaveBeenCalledWith({ filename, status: failStatus, retries: 1 });
+        expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 1 });
       }
     });
 
     test('should success when the upload to SFTP server success and not to remove the file', async () => {
       const filename = getFilename(false);
       const failStatus = 'failed_to_send';
-      const successStatus = 'sent';
 
-      store.getAllFail.mockResolvedValueOnce(null);
+      store.getOne.mockResolvedValueOnce(null);
       sftp.uploadFile.mockResolvedValueOnce();
 
       let err;
@@ -88,24 +86,22 @@ describe('Uploader component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(store.getAllFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
-        expect(store.insertOneSuccess).toHaveBeenCalledWith({ filename, status: successStatus, retries: 0 });
 
         expect(archiver.deleteFile).not.toHaveBeenCalled();
-        expect(store.deleteOneFail).not.toHaveBeenCalled();
+        expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
-        expect(store.upsertOneFail).not.toHaveBeenCalled();
+        expect(store.upsertOne).not.toHaveBeenCalled();
       }
     });
 
     test('should success when the upload to SFTP server success and remove the file', async () => {
       const filename = getFilename(true);
       const failStatus = 'failed_to_send';
-      const successStatus = 'sent';
 
-      store.getAllFail.mockResolvedValueOnce(null);
+      store.getOne.mockResolvedValueOnce(null);
       sftp.uploadFile.mockResolvedValueOnce();
 
       let err;
@@ -116,23 +112,22 @@ describe('Uploader component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(store.getAllFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
-        expect(store.insertOneSuccess).toHaveBeenCalledWith({ filename, status: successStatus, retries: 0 });
 
         expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, `${filename}.zip`));
-        expect(store.deleteOneFail).not.toHaveBeenCalled();
+        expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
-        expect(store.upsertOneFail).not.toHaveBeenCalled();
+        expect(store.upsertOne).not.toHaveBeenCalled();
       }
     });
 
-    test('should fail when the upload to SFTP server fails for the second time', async () => {
+    test('should fail when the upload to SFTP server fails on the second try', async () => {
       const filename = '2020-09-01';
       const failStatus = 'failed_to_send';
 
-      store.getAllFail.mockResolvedValueOnce({
+      store.getOne.mockResolvedValueOnce({
         filename, status: failStatus, retries: 1,
       });
       sftp.uploadFile.mockRejectedValueOnce(new Error('Error uploading file to SFTP'));
@@ -145,24 +140,22 @@ describe('Uploader component tests', () => {
       } finally {
         expect(err).toBeDefined();
 
-        expect(store.getAllFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
-        expect(store.insertOneSuccess).not.toHaveBeenCalled();
 
         expect(archiver.deleteFile).not.toHaveBeenCalled();
-        expect(store.deleteOneFail).not.toHaveBeenCalled();
+        expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).toHaveBeenCalled();
-        expect(store.upsertOneFail).toHaveBeenCalledWith({ filename, status: failStatus, retries: 2 });
+        expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 2 });
       }
     });
 
-    test('should success when the upload to SFTP server success at the second time and not to remove the file', async () => {
+    test('should success when the upload to SFTP server success on the second try and not to remove the file', async () => {
       const filename = getFilename(false);
       const failStatus = 'failed_to_send';
-      const successStatus = 'sent';
 
-      store.getAllFail.mockResolvedValueOnce({
+      store.getOne.mockResolvedValueOnce({
         filename, status: failStatus, retries: 1,
       });
       sftp.uploadFile.mockResolvedValueOnce();
@@ -175,24 +168,22 @@ describe('Uploader component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(store.getAllFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
-        expect(store.insertOneSuccess).toHaveBeenCalledWith({ filename, status: successStatus, retries: 1 });
 
         expect(archiver.deleteFile).not.toHaveBeenCalled();
-        expect(store.deleteOneFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
 
         expect(postMessageSpy).not.toHaveBeenCalled();
-        expect(store.upsertOneFail).not.toHaveBeenCalled();
+        expect(store.upsertOne).not.toHaveBeenCalled();
       }
     });
 
-    test('should success when the upload to SFTP server success at the second time and remove the file', async () => {
+    test('should success when the upload to SFTP server success on the second try and remove the file', async () => {
       const filename = getFilename(true);
       const failStatus = 'failed_to_send';
-      const successStatus = 'sent';
 
-      store.getAllFail.mockResolvedValueOnce({
+      store.getOne.mockResolvedValueOnce({
         filename, status: failStatus, retries: 1,
       });
       sftp.uploadFile.mockResolvedValueOnce();
@@ -205,15 +196,14 @@ describe('Uploader component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(store.getAllFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
-        expect(store.insertOneSuccess).toHaveBeenCalledWith({ filename, status: successStatus, retries: 1 });
 
         expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, `${filename}.zip`));
-        expect(store.deleteOneFail).toHaveBeenCalledWith({ filename, status: failStatus });
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
 
         expect(postMessageSpy).not.toHaveBeenCalled();
-        expect(store.upsertOneFail).not.toHaveBeenCalled();
+        expect(store.upsertOne).not.toHaveBeenCalled();
       }
     });
   });
