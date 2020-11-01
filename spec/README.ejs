@@ -1,0 +1,112 @@
+# <%- app.name %>@<%- app.version %>
+
+<%- app.description %>
+
+_Note: This README was generated. Modifications can be made in [spec/README.ejs](spec/README.ejs)_
+
+## Documentation
+
+1. [General Info](#general-information)
+2. [Testing](#testing)
+3. [Database](#database)
+
+### General Information
+
+#### Setup
+
+1. `nvm install 12.13.0`
+2. `nvm use`
+
+### Use
+
+1. `npm run infra:up`
+2. `npm run start`
+
+### Testing
+
+To run the tests:
+
+1. Start the environment `npm run infra:up`
+2. Install dependencies `npm install`
+3. Run the test `npm t`
+
+_To stop the infra `npm run infra:down`_
+
+### Database
+
+This project use [mongoDB](https://www.mongodb.com/) as Database to store successful and fail compression and upload tasks. These are the env variables:
+
+```sh
+MONGO_CONNECTION_STRING
+SUCCESS_COLLECTION_NAME
+FAIL_COLLECTION_NAME
+DAILY_DATABASE_NAME
+```
+`MONGO_CONNECTION_STRING` defines the host address and port.
+
+`SUCCESS_COLLECTION_NAME` and `FAIL_COLLECTION_NAME` are the name of the collections to store succesful and fail compression and upload tasks.
+
+`DAILY_DATABASE_NAME` is the name of database.
+
+Default values:
+
+```sh
+MONGO_CONNECTION_STRING=mongodb://localhost:27018
+SUCCESS_COLLECTION_NAME=success
+FAIL_COLLECTION_NAME=fail
+DAILY_DATABASE_NAME=echoes-backup
+```
+
+### SFTP server
+
+This project relies on a SFTP server to backup the files. You should provide the following env variables:
+
+```sh
+SFTP_HOSTNAME
+SFTP_PORT
+SFTP_USERNAME
+SFTP_PASSWORD
+```
+
+Default values: 
+
+```sh
+SFTP_HOSTNAME=localhost
+SFTP_PORT=2222
+SFTP_USERNAME=username
+SFTP_PASSWORD=password
+```
+
+### Slack
+
+This project uses Slack to report errors optionally. You need to create an [Slack App](https://api.slack.com/apps) and provide the following env variables
+
+```sh
+SLACK_TOKEN
+SLACK_CHANNEL
+```
+
+Where `SLACK_TOKEN` is the [token](https://api.slack.com/tokens) for your Slack App and `SLACK_CHANNEL` is the ID of the channel you want this app to send messages to.
+
+**In case you do not provide both values, Slack alert messages will be deactivated.**
+
+#### Scripts 
+
+You can execute them using `npm run [script name]`, like `npm run lint`
+
+##### Current available tasks
+<% for (let script in app.scripts) { %>
+- `<%- script%>`: `<%- app.scripts[script] %>`<% } %>
+
+#### Hooks
+
+Check the NPM scripts in `husky > hooks` 
+
+#### Production dependencies
+<% for (let dependency in app.dependencies) { %>
+- [<%- dependency %>@<%- app.dependencies[dependency] %>](https://www.npmjs.com/package/<%- dependency %>)<% } %>
+
+#### Development dependencies
+<% for (let dependency in app.devDependencies) { %>
+- [<%- dependency %>@<%- app.devDependencies[dependency] %>](https://www.npmjs.com/package/<%- dependency %>)<% } %>
+

@@ -1,7 +1,7 @@
 {
   "name": "echoes-backup-client",
   "version": "0.0.1",
-  "description": "",
+  "description": "Node.js app to backup files generate by Echoes",
   "main": "index.js",
   "scripts": {
     "local": "SERVICE_ENV=local node index.js",
@@ -12,7 +12,8 @@
     "infra:down": "bash -c 'docker-compose --file docker/test/docker-compose.yml --project-name echoes-backup-client-test stop'",
     "lint": "eslint .",
     "manifest": "node_modules/make-manifest/bin/make-manifest",
-    "gitLog": "node gitLogFormatter/index.js"
+    "gitLog": "node gitLogFormatter/index.js",
+    "docs": "node spec/index.js"
   },
   "husky": {
     "hooks": {
@@ -47,6 +48,7 @@
     "cross-env": "^7.0.2",
     "debug": "^4.1.1",
     "dotenv": "^8.2.0",
+    "ejs": "^3.1.5",
     "express-swagger-generator": "^1.1.15",
     "fs-extra": "^9.0.1",
     "hogan.js": "^3.0.2",
