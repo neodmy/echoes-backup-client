@@ -10,6 +10,8 @@
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit --reporters=default",
     "infra:up": "bash -c 'docker-compose --file docker/test/docker-compose.yml --project-name echoes-backup-client-test up -d --force-recreate --build'",
     "infra:down": "bash -c 'docker-compose --file docker/test/docker-compose.yml --project-name echoes-backup-client-test stop'",
+    "prod:up": "bash -c 'docker-compose --file docker-compose.yml --project-name echoes-backup-client up -d --force-recreate --build'",
+    "prod:down": "bash -c 'docker-compose --file docker-compose.yml --project-name echoes-backup-client stop'",
     "lint": "eslint .",
     "manifest": "node_modules/make-manifest/bin/make-manifest",
     "gitLog": "node gitLogFormatter/index.js",
