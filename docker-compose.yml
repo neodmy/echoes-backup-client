@@ -1,0 +1,35 @@
+version: "3.5"
+
+services:
+  echoes-backup-client:
+    build:
+      context: ./Dockerfile
+    container_name:  echoes-backup-client
+    environment:
+      # SLACK
+      SLACK_STATUS: inactive
+      SLACK_TOKEN: token
+      SLACK_CHANNEL: channel
+      # SFTP
+      SFTP_HOSTNAME: hostname
+      SFTP_PORT: 22
+      SFTP_USERNAME: username
+      SFTP_PASSWORD: password
+      # DIRECTORIES
+      REMOTE_DIRECTORY: /mnt/kepler/meteoros/detecciones
+      # CLIENT
+      CLIENT_ID: client
+      REMOVAL_OFFSET: 21
+      # DATABASE
+      MONGO_CONNECTION_STRING: mongodb://mongo-echoes-backup-client:27018
+    ports:
+      - "4000:4000"
+    volumes:
+      - /home/meteoros20/echoes:/echoes
+  mongo:
+    image: mongo:3.6
+    container_name: mongo-echoes-backup-client
+    volumes:
+      - /data/db
+    ports:
+      - "27018:27017"
