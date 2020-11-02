@@ -1,6 +1,6 @@
 const system = require('../../../system');
 
-const slackBotMock = require('../../mocks/slackBotMock');
+const slackMock = require('../../mocks/slackMock');
 const sftpMock = require('../../mocks/sftpMock');
 const archiverMock = require('../../mocks/archiverMock');
 const storeMock = require('../../mocks/storeMock');
@@ -20,7 +20,7 @@ describe('Controller component tests', () => {
   let store;
 
   beforeAll(async () => {
-    sys.set('slackBot', slackBotMock());
+    sys.set('slack', slackMock());
     sys.set('sftp', sftpMock());
     sys.set('archiver', archiverMock());
     sys.set('store', storeMock());

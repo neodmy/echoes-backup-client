@@ -9,6 +9,7 @@ module.exports = {
     database: process.env.DAILY_DATABASE_NAME || 'echoes-backup',
   },
   slack: {
+    status: process.env.SLACK_STATUS || 'active',
     token: process.env.SLACK_TOKEN,
     channel: process.env.SLACK_CHANNEL,
   },

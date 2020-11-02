@@ -5,8 +5,8 @@ const initController = require('./controller');
 
 module.exports = new System({ name: 'controller' })
   .add('compressor', initCompressor())
-  .dependsOn({ component: 'config', source: 'controller' }, 'logger', 'archiver', 'store', 'slackBot')
+  .dependsOn({ component: 'config', source: 'controller' }, 'logger', 'archiver', 'store', 'slack')
   .add('uploader', initUploader())
-  .dependsOn({ component: 'config', source: 'controller' }, 'logger', 'archiver', 'store', 'slackBot', 'sftp')
+  .dependsOn({ component: 'config', source: 'controller' }, 'logger', 'archiver', 'store', 'slack', 'sftp')
   .add('controller', initController())
   .dependsOn('config', 'logger', 'archiver', 'compressor', 'uploader', 'store');

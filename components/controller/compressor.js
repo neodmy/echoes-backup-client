@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = () => {
   const start = async ({
-    config, logger, archiver, store, slackBot,
+    config, logger, archiver, store, slack,
   }) => {
     debug('Initializing controller');
     const { localPath } = config;
@@ -29,7 +29,7 @@ module.exports = () => {
       } catch (error) {
         const errorMessage = `Error compressing file. File will be saved for future reprocessing | File ${filename}`;
         logger.error(errorMessage);
-        await slackBot.postMessage(errorMessage);
+        await slack.postMessage(errorMessage);
 
         await store.upsertOne({
           filename, status: failStatus, retries: currentRetries + 1,

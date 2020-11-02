@@ -2,14 +2,14 @@ const fs = require('fs-extra');
 const path = require('path');
 const system = require('../../../system');
 
-const slackBotMock = require('../../mocks/slackBotMock');
+const slackMock = require('../../mocks/slackMock');
 
 describe('Sftp component tests', () => {
-  const sys = system();
+  let sys = system();
   let sftp;
 
   beforeAll(async () => {
-    sys.set('slackBot', slackBotMock());
+    sys = sys.set('slack', slackMock());
     ({ sftp } = await sys.start());
   });
 
