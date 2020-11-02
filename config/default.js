@@ -4,29 +4,29 @@ module.exports = {
     port: 4000,
   },
   mongo: {
-    url: process.env.MONGO_CONNECTION_STRING || 'mongodb://localhost:27018',
+    url: process.env.MONGO_CONNECTION_STRING,
     options: { useUnifiedTopology: true },
   },
   store: {
-    collection: process.env.FAIL_COLLECTION_NAME || 'fail',
-    database: process.env.DAILY_DATABASE_NAME || 'echoes-backup',
+    collection: 'fail',
+    database: 'echoes-backup',
   },
   slack: {
-    status: process.env.SLACK_STATUS || 'active',
+    status: process.env.SLACK_STATUS,
     token: process.env.SLACK_TOKEN,
     channel: process.env.SLACK_CHANNEL,
   },
   sftp: {
-    hostname: process.env.SFTP_HOSTNAME || 'localhost',
-    port: process.env.SFTP_PORT || 2222,
-    username: process.env.SFTP_USERNAME || 'username',
-    password: process.env.SFTP_PASSWORD || 'password',
+    hostname: process.env.SFTP_HOSTNAME,
+    port: process.env.SFTP_PORT,
+    username: process.env.SFTP_USERNAME,
+    password: process.env.SFTP_PASSWORD,
   },
   controller: {
     clientId: process.env.CLIENT_ID,
-    remotePath: process.env.REMOTE_DIRECTORY || 'echoes/temp',
-    localPath: process.env.ECHOES_SOURCE_DIRECTORY,
-    removalOffset: process.env.REMOVAL_OFFSET || 21,
+    remotePath: process.env.REMOTE_DIRECTORY,
+    localPath: '/echoes',
+    removalOffset: process.env.REMOVAL_OFFSET || 1,
   },
   routes: {
     admin: {
