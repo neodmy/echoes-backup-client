@@ -8,7 +8,7 @@ const storeMock = require('../../mocks/storeMock');
 
 const {
   controller: { localPath },
-} = require('../../../config/default');
+} = require('../../../config/test');
 
 describe('Compressor component tests', () => {
   const sys = system();

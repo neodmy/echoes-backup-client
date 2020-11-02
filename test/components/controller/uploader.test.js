@@ -10,7 +10,7 @@ const {
   controller: {
     localPath, remotePath, clientId, removalOffset,
   },
-} = require('../../../config/default');
+} = require('../../../config/test');
 
 describe('Uploader component tests', () => {
   const sys = system();
@@ -71,7 +71,7 @@ describe('Uploader component tests', () => {
       }
     });
 
-    test('should success when the upload to SFTP server success and not to remove the file', async () => {
+    test('should success when the upload to SFTP server success on the first try and not to remove the file', async () => {
       const filename = getFilename(false);
       const failStatus = 'failed_to_send';
 
@@ -97,7 +97,7 @@ describe('Uploader component tests', () => {
       }
     });
 
-    test('should success when the upload to SFTP server success and remove the file', async () => {
+    test('should success when the upload to SFTP server success on the first try and remove the file', async () => {
       const filename = getFilename(true);
       const failStatus = 'failed_to_send';
 
