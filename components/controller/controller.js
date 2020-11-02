@@ -13,8 +13,11 @@ module.exports = () => {
       const processFilePromises = filenames.map(async filename => {
         try {
           const filenameWithoutExtension = filename.replace('.zip', '');
-          if (!filename.includes('zip')) await compressor.handleCompression(filenameWithoutExtension);
-          await uploader.handleUpload(filenameWithoutExtension);
+          const isFileToProcess = /^(19|20)\d\d([- /.])(0[1-9]|1[012])\2(0[1-9]|[12][0-9]|3[01])$/.test(filenameWithoutExtension);
+          if (isFileToProcess) {
+            if (!filename.includes('zip')) await compressor.handleCompression(filenameWithoutExtension);
+            await uploader.handleUpload(filenameWithoutExtension);
+          }
         } catch (error) {
           logger.error(error.message);
         }

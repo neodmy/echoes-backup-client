@@ -9,7 +9,7 @@ const uploaderMock = require('../../mocks/uploaderMock');
 
 const {
   controller: { removalOffset },
-} = require('../../../config/default');
+} = require('../../../config/test');
 
 describe('Controller component tests', () => {
   const sys = system();
@@ -64,10 +64,51 @@ describe('Controller component tests', () => {
       }
     });
 
+    test('should handle two files to compress and upload, and omit other with no YYYY-mm-dd pattern on its name', async () => {
+      const filename = getFilename();
+
+      archiver.getDirectoryContent.mockResolvedValueOnce([filename, filename, 'someotherfile']);
+
+      let err;
+      try {
+        await controller.init();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+      }
+    });
+
     test('should handle two files to upload', async () => {
       const filename = getFilename();
 
       archiver.getDirectoryContent.mockResolvedValueOnce([`${filename}.zip`, `${filename}.zip`]);
+
+      let err;
+      try {
+        await controller.init();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(compressor.handleCompression).not.toHaveBeenCalled();
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+      }
+    });
+
+    test('should handle two files to upload, and omit other with no YYYY-mm-dd pattern on its name', async () => {
+      const filename = getFilename();
+
+      archiver.getDirectoryContent.mockResolvedValueOnce([`${filename}.zip`, `${filename}.zip`, 'someotherfile.zip']);
 
       let err;
       try {
