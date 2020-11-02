@@ -1,7 +1,7 @@
 const path = require('path');
 const system = require('../../../system');
 
-const slackBotMock = require('../../mocks/slackBotMock');
+const slackMock = require('../../mocks/slackMock');
 const sftpMock = require('../../mocks/sftpMock');
 const archiverMock = require('../../mocks/archiverMock');
 const storeMock = require('../../mocks/storeMock');
@@ -17,20 +17,20 @@ describe('Uploader component tests', () => {
   let uploader;
   let store;
   let archiver;
-  let slackBot;
+  let slack;
   let sftp;
   let postMessageSpy;
 
   beforeAll(async () => {
-    sys.set('slackBot', slackBotMock());
+    sys.set('slack', slackMock());
     sys.set('sftp', sftpMock());
     sys.set('archiver', archiverMock());
     sys.set('store', storeMock());
     ({
-      uploader, store, archiver, slackBot, sftp,
+      uploader, store, archiver, slack, sftp,
     } = await sys.start());
 
-    postMessageSpy = jest.spyOn(slackBot, 'postMessage');
+    postMessageSpy = jest.spyOn(slack, 'postMessage');
   });
 
   afterEach(() => jest.clearAllMocks());

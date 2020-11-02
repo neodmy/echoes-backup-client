@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = () => {
   const start = async ({
-    config, logger, archiver, store, slackBot, sftp,
+    config, logger, archiver, store, slack, sftp,
   }) => {
     debug('Initializing controller');
     const {
@@ -38,7 +38,7 @@ module.exports = () => {
       } catch (error) {
         const errorMessage = `Error uploading file. File will be saved for future resending | File ${filename}`;
         logger.error(errorMessage);
-        await slackBot.postMessage(errorMessage);
+        await slack.postMessage(errorMessage);
 
         await store.upsertOne({
           filename, status: 'failed_to_send', retries: currentRetries + 1,

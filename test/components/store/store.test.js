@@ -1,13 +1,13 @@
 const system = require('../../../system');
 
-const slackBotMock = require('../../mocks/slackBotMock');
+const slackMock = require('../../mocks/slackMock');
 
 describe('Store component tests', () => {
-  const sys = system();
+  let sys = system();
   let store;
 
   beforeAll(async () => {
-    sys.set('slackBot', slackBotMock());
+    sys = sys.set('slackBot', slackMock());
     ({ store } = await sys.start());
   });
 

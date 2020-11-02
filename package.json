@@ -40,6 +40,7 @@
     "supertest": "^4.0.2"
   },
   "dependencies": {
+    "@slack/web-api": "^5.13.0",
     "archiver": "^5.0.0",
     "body-parser": "^1.19.0",
     "boom": "^7.3.0",
@@ -64,8 +65,7 @@
     "systemic": "^3.3.0",
     "systemic-domain-runner": "^1.1.0",
     "systemic-express": "^1.1.1",
-    "systemic-mongodb": "^2.0.2",
-    "systemic-slack": "^1.0.1"
+    "systemic-mongodb": "^2.0.2"
   },
   "developers": {
     "David Yusta": "neodmy"

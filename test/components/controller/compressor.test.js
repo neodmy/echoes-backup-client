@@ -1,7 +1,7 @@
 const path = require('path');
 const system = require('../../../system');
 
-const slackBotMock = require('../../mocks/slackBotMock');
+const slackMock = require('../../mocks/slackMock');
 const sftpMock = require('../../mocks/sftpMock');
 const archiverMock = require('../../mocks/archiverMock');
 const storeMock = require('../../mocks/storeMock');
@@ -15,19 +15,19 @@ describe('Compressor component tests', () => {
   let compressor;
   let store;
   let archiver;
-  let slackBot;
+  let slack;
   let postMessageSpy;
 
   beforeAll(async () => {
-    sys.set('slackBot', slackBotMock());
+    sys.set('slack', slackMock());
     sys.set('sftp', sftpMock());
     sys.set('archiver', archiverMock());
     sys.set('store', storeMock());
     ({
-      compressor, store, archiver, slackBot,
+      compressor, store, archiver, slack,
     } = await sys.start());
 
-    postMessageSpy = jest.spyOn(slackBot, 'postMessage');
+    postMessageSpy = jest.spyOn(slack, 'postMessage');
   });
 
   afterEach(() => jest.clearAllMocks());

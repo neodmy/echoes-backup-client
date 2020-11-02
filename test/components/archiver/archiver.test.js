@@ -2,14 +2,14 @@ const fs = require('fs-extra');
 const path = require('path');
 const system = require('../../../system');
 
-const slackBotMock = require('../../mocks/slackBotMock');
+const slackMock = require('../../mocks/slackMock');
 
 describe('Archiver component tests', () => {
-  const sys = system();
+  let sys = system();
   let archiver;
 
   beforeAll(async () => {
-    sys.set('slackBot', slackBotMock());
+    sys = sys.set('slack', slackMock());
     ({ archiver } = await sys.start());
   });
 
