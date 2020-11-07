@@ -1,3 +1,5 @@
+const path = require('path');
+
 const system = require('../../../system');
 
 const slackMock = require('../../mocks/slackMock');
@@ -8,7 +10,7 @@ const compressorMock = require('../../mocks/compressorMock');
 const uploaderMock = require('../../mocks/uploaderMock');
 
 const {
-  controller: { removalOffset },
+  controller: { removalOffset, localPath },
 } = require('../../../config/test');
 
 describe('Controller component tests', () => {
@@ -35,18 +37,12 @@ describe('Controller component tests', () => {
 
   afterAll(() => sys.stop());
 
-  const getFilename = (shouldBeRemoved = false) => {
-    const today = new Date();
-    const offset = shouldBeRemoved ? removalOffset + 1 : 0;
-    today.setDate(today.getDate() - offset);
-    return today.toISOString().split('T')[0];
-  };
-
   describe('init', () => {
     test('should handle two files to compress and upload', async () => {
-      const filename = getFilename();
+      const filename1 = '2020-10-09';
+      const filename2 = '2020-10-10';
 
-      archiver.getDirectoryContent.mockResolvedValueOnce([filename, filename]);
+      archiver.getDirectoryContent.mockResolvedValueOnce([filename1, filename2]);
 
       let err;
       try {
@@ -57,17 +53,20 @@ describe('Controller component tests', () => {
         expect(err).toBeUndefined();
 
         expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
-        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename1);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename2);
 
         expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename1);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename2);
       }
     });
 
     test('should handle two files to compress and upload, and omit other with no YYYY-mm-dd pattern on its name', async () => {
-      const filename = getFilename();
+      const filename1 = '2020-10-09';
+      const filename2 = '2020-10-10';
 
-      archiver.getDirectoryContent.mockResolvedValueOnce([filename, filename, 'someotherfile']);
+      archiver.getDirectoryContent.mockResolvedValueOnce([filename1, filename2, 'someotherfile']);
 
       let err;
       try {
@@ -78,17 +77,20 @@ describe('Controller component tests', () => {
         expect(err).toBeUndefined();
 
         expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
-        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename1);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename2);
 
         expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename1);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename2);
       }
     });
 
     test('should handle two files to upload', async () => {
-      const filename = getFilename();
+      const filename1 = '2020-10-09';
+      const filename2 = '2020-10-10';
 
-      archiver.getDirectoryContent.mockResolvedValueOnce([`${filename}.zip`, `${filename}.zip`]);
+      archiver.getDirectoryContent.mockResolvedValueOnce([`${filename1}.zip`, `${filename2}.zip`]);
 
       let err;
       try {
@@ -101,14 +103,16 @@ describe('Controller component tests', () => {
         expect(compressor.handleCompression).not.toHaveBeenCalled();
 
         expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename1);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename2);
       }
     });
 
     test('should handle two files to upload, and omit other with no YYYY-mm-dd pattern on its name', async () => {
-      const filename = getFilename();
+      const filename1 = '2020-10-09';
+      const filename2 = '2020-10-10';
 
-      archiver.getDirectoryContent.mockResolvedValueOnce([`${filename}.zip`, `${filename}.zip`, 'someotherfile.zip']);
+      archiver.getDirectoryContent.mockResolvedValueOnce([`${filename1}.zip`, `${filename2}.zip`, 'someotherfile.zip']);
 
       let err;
       try {
@@ -121,14 +125,16 @@ describe('Controller component tests', () => {
         expect(compressor.handleCompression).not.toHaveBeenCalled();
 
         expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename1);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename2);
       }
     });
 
     test('should handle a file to compress and upload, and one to upload', async () => {
-      const filename = getFilename();
+      const filename1 = '2020-10-09';
+      const filename2 = '2020-10-10';
 
-      archiver.getDirectoryContent.mockResolvedValueOnce([filename, `${filename}.zip`]);
+      archiver.getDirectoryContent.mockResolvedValueOnce([filename1, `${filename2}.zip`]);
 
       let err;
       try {
@@ -139,17 +145,19 @@ describe('Controller component tests', () => {
         expect(err).toBeUndefined();
 
         expect(compressor.handleCompression).toHaveBeenCalledTimes(1);
-        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename1);
 
         expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename1);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename2);
       }
     });
 
     test('should handle a compression failure for the first file, and compress and upload the second file', async () => {
-      const filename = getFilename();
+      const filename1 = '2020-10-09';
+      const filename2 = '2020-10-10';
 
-      archiver.getDirectoryContent.mockResolvedValueOnce([filename, filename]);
+      archiver.getDirectoryContent.mockResolvedValueOnce([filename1, filename2]);
       compressor.handleCompression.mockRejectedValueOnce(new Error());
 
       let err;
@@ -161,17 +169,19 @@ describe('Controller component tests', () => {
         expect(err).toBeUndefined();
 
         expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
-        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename1);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename2);
 
         expect(uploader.handleUpload).toHaveBeenCalledTimes(1);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename2);
       }
     });
 
     test('should handle an upload failure for the first file, and upload the second file', async () => {
-      const filename = getFilename();
+      const filename1 = '2020-10-09';
+      const filename2 = '2020-10-10';
 
-      archiver.getDirectoryContent.mockResolvedValueOnce([`${filename}.zip`, `${filename}.zip`]);
+      archiver.getDirectoryContent.mockResolvedValueOnce([`${filename1}.zip`, `${filename2}.zip`]);
       uploader.handleUpload.mockRejectedValueOnce(new Error());
 
       let err;
@@ -185,14 +195,15 @@ describe('Controller component tests', () => {
         expect(compressor.handleCompression).not.toHaveBeenCalled();
 
         expect(uploader.handleUpload).toHaveBeenCalledTimes(2);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename1);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename2);
       }
     });
   });
 
   describe('processFileToCompress', () => {
     test('should compress and upload a file', async () => {
-      const filename = getFilename();
+      const filename = '2020-10-09';
 
       let err;
       try {
@@ -211,7 +222,7 @@ describe('Controller component tests', () => {
     });
 
     test('should handle a compress failure and not to try uploading the file', async () => {
-      const filename = getFilename();
+      const filename = '2020-10-09';
 
       compressor.handleCompression.mockRejectedValueOnce(new Error());
 
@@ -231,7 +242,7 @@ describe('Controller component tests', () => {
     });
 
     test('should compress the file and handle an upload failure', async () => {
-      const filename = getFilename();
+      const filename = '2020-10-09';
 
       uploader.handleUpload.mockRejectedValueOnce(new Error());
 
@@ -460,6 +471,112 @@ describe('Controller component tests', () => {
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress2.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload1.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload2.filename);
+      }
+    });
+  });
+
+  describe('deleteOldFiles', () => {
+    const getFilename = (shouldBeRemoved = false, offsetDays = 1) => {
+      const today = new Date();
+      const offset = shouldBeRemoved ? removalOffset + offsetDays : 0;
+      today.setDate(today.getDate() - offset);
+      return today.toISOString().split('T')[0];
+    };
+
+    test('should delete two files older than the offset', async () => {
+      const fileToCompress1 = {
+        filename: getFilename(true, 1),
+        status: 'sent',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToCompress2 = {
+        filename: getFilename(true, 2),
+        status: 'sent',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
+
+      let err;
+      try {
+        await controller.deleteOldFiles();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress1.filename));
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress2.filename));
+
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileToCompress1.filename, status: fileToCompress1.status });
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileToCompress2.filename, status: fileToCompress2.status });
+      }
+    });
+
+    test('should delete one file older than the offset and skip other file', async () => {
+      const fileToCompress1 = {
+        filename: getFilename(true, 1),
+        status: 'sent',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToCompress2 = {
+        filename: getFilename(false),
+        status: 'sent',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
+
+      let err;
+      try {
+        await controller.deleteOldFiles();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress1.filename));
+
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileToCompress1.filename, status: fileToCompress1.status });
+      }
+    });
+
+    test('should delete one older than the offset and handle an error when deleting the other file', async () => {
+      const fileToCompress1 = {
+        filename: getFilename(true, 1),
+        status: 'sent',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToCompress2 = {
+        filename: getFilename(true, 2),
+        status: 'sent',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
+      archiver.deleteFile.mockRejectedValueOnce(new Error('Error deleting file'));
+
+      let err;
+      try {
+        await controller.deleteOldFiles();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress1.filename));
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress2.filename));
+
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileToCompress2.filename, status: fileToCompress2.status });
       }
     });
   });
