@@ -1,11 +1,14 @@
 const debug = require('debug')('service:task-controller');
+const path = require('path');
+
+const { shouldRemove } = require('../../util');
 
 module.exports = () => {
   const start = async ({
     config, logger, archiver, compressor, uploader, store,
   }) => {
     debug('Initializing controller');
-    const { localPath } = config;
+    const { localPath, removalOffset } = config;
 
     const init = async () => {
       const filenames = await archiver.getDirectoryContent(localPath);
@@ -56,10 +59,30 @@ module.exports = () => {
       await Promise.all(processFilesToSend);
     };
 
+    const deleteOldFiles = async () => {
+      const sentFiles = await store.getAll({ status: 'sent' });
+
+      const deleteFilePromises = sentFiles.map(async ({ filename, status }) => {
+        try {
+          if (shouldRemove(filename, removalOffset)) {
+            logger.info(`Deleting file | Filename ${filename}`);
+            await archiver.deleteFile(path.join(localPath, filename));
+            await store.deleteOne({ filename, status });
+          }
+          logger.info(`File is not older than offset. File will not be deleted | Filename ${filename}`);
+        } catch (error) {
+          logger.error(`Error deleting file | File deletion will be retried in the next execution | Filename ${filename} | Error ${error}`);
+        }
+      });
+
+      await Promise.all(deleteFilePromises);
+    };
+
     return {
       init,
       processFileToCompress,
       processRetries,
+      deleteOldFiles,
     };
   };
 
