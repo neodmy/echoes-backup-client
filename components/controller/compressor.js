@@ -5,7 +5,7 @@ module.exports = () => {
   const start = async ({
     config, logger, archiver, store, slack,
   }) => {
-    debug('Initializing controller');
+    debug('Initializing compressor controller');
     const { localPath } = config;
 
     const getcurrentRetries = async ({ filename, status }) => {
@@ -19,6 +19,7 @@ module.exports = () => {
 
       let currentRetries;
       try {
+        logger.info(`File compression has started | Filename ${filename}`);
         currentRetries = await getcurrentRetries({ filename, status: failStatus });
 
         const localFilePath = path.join(localPath, filename);
@@ -26,10 +27,11 @@ module.exports = () => {
         await archiver.deleteFile(localFilePath);
 
         if (currentRetries) await store.deleteOne({ filename, status: failStatus });
+
+        logger.info(`File compression has been completed successfully | Filename ${filename}`);
       } catch (error) {
-        const errorMessage = `Error compressing file. File will be saved for future reprocessing | File ${filename}`;
-        logger.error(errorMessage);
-        await slack.postMessage(errorMessage);
+        logger.error(`Error compressing file. File will be saved for future reprocessing | File ${filename} | Error ${error}`);
+        await slack.postMessage(`Error compressing file. File will be saved for future reprocessing | File ${filename}`);
 
         await store.upsertOne({
           filename, status: failStatus, retries: currentRetries + 1,

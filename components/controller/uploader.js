@@ -5,7 +5,7 @@ module.exports = () => {
   const start = async ({
     config, logger, store, slack, sftp,
   }) => {
-    debug('Initializing controller');
+    debug('Initializing uploader controller');
     const {
       localPath, remotePath, clientId,
     } = config;
@@ -21,16 +21,18 @@ module.exports = () => {
 
       let currentRetries;
       try {
+        logger.info(`File upload has started | Filename ${filename}`);
         currentRetries = await getcurrentRetries({ filename, status: failStatus });
 
         await sftp.uploadFile({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
 
         if (currentRetries) await store.deleteOne({ filename, status: failStatus });
         await store.upsertOne({ filename, status: 'sent' });
+
+        logger.info(`File upload has been completed successfully | Filename ${filename}`);
       } catch (error) {
-        const errorMessage = `Error uploading file. File will be saved for future resending | File ${filename}`;
-        logger.error(errorMessage);
-        await slack.postMessage(errorMessage);
+        logger.error(`Error uploading file. File will be saved for future resending | File ${filename} | Error ${error}`);
+        await slack.postMessage(`Error uploading file. File will be saved for future resending | File ${filename}`);
 
         await store.upsertOne({
           filename, status: 'failed_to_send', retries: currentRetries + 1,
