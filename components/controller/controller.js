@@ -66,7 +66,7 @@ module.exports = () => {
         try {
           if (shouldRemove(filename, removalOffset)) {
             logger.info(`Deleting file | Filename ${filename}`);
-            await archiver.deleteFile(path.join(localPath, filename));
+            await archiver.deleteFile(path.join(localPath, `${filename}.zip`));
             await store.deleteOne({ filename, status });
           }
           logger.info(`File is not older than offset. File will not be deleted | Filename ${filename}`);
