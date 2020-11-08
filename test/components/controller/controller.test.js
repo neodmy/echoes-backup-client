@@ -508,8 +508,8 @@ describe('Controller component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress1.filename));
-        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress2.filename));
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, `${fileToCompress1.filename}.zip`));
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, `${fileToCompress2.filename}.zip`));
 
         expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileToCompress1.filename, status: fileToCompress1.status });
         expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileToCompress2.filename, status: fileToCompress2.status });
@@ -541,7 +541,7 @@ describe('Controller component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress1.filename));
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, `${fileToCompress1.filename}.zip`));
 
         expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileToCompress1.filename, status: fileToCompress1.status });
       }
@@ -573,8 +573,8 @@ describe('Controller component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress1.filename));
-        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileToCompress2.filename));
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, `${fileToCompress1.filename}.zip`));
+        expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, `${fileToCompress2.filename}.zip`));
 
         expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileToCompress2.filename, status: fileToCompress2.status });
       }
