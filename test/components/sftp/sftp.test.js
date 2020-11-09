@@ -1,4 +1,3 @@
-const fs = require('fs-extra');
 const path = require('path');
 const system = require('../../../system');
 
@@ -34,31 +33,149 @@ describe('Sftp component tests', () => {
     }
   });
 
-  test('should upload a file when the directory does not exist', async () => {
+  test('should upload a file when the directory does not exist in the FTP server', async () => {
     const filename = '2020-09-10.txt';
-    const localPath = path.join(__dirname, '../../fixtures/temp/echoes/');
+    const localPath = path.join(__dirname, '../../fixtures/original/echoes/');
     const remotePath = '/echoes/temp';
-    const fixtureFilePath = path.join(localPath, filename);
 
-    fs.createFileSync(fixtureFilePath);
-    const result = await sftp.uploadFile({ filename, localPath, remotePath });
-    expect(result).toEqual(expect.stringContaining('was successfully uploaded'));
-    fs.removeSync(fixtureFilePath);
-    await sftp.removeDir({ remotePath });
+    let result;
+    let err;
+    try {
+      result = await sftp.uploadFile({ filename, localPath, remotePath });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeUndefined();
+      expect(result).toEqual(expect.stringContaining('was successfully uploaded'));
+
+      await sftp.removeDir({ remotePath });
+    }
   });
 
-  test('should upload a file when the directory exists', async () => {
+  test('should upload a file when the directory exists in the FTP server', async () => {
     const filename = '2020-09-10.txt';
-    const localPath = path.join(__dirname, '../../fixtures/temp/echoes/');
+    const localPath = path.join(__dirname, '../../fixtures/original/echoes/');
     const remotePath = '/echoes/tmp';
-    const fixtureFilePath = path.join(localPath, filename);
 
-    fs.createFileSync(fixtureFilePath);
-    let result = await sftp.uploadFile({ filename, localPath, remotePath });
-    await sftp.removeFile({ filename, remotePath });
-    result = await sftp.uploadFile({ filename, localPath, remotePath });
-    expect(result).toEqual(expect.stringContaining('was successfully uploaded'));
-    fs.removeSync(fixtureFilePath);
-    await sftp.removeDir({ remotePath });
+    let result;
+    let err;
+    try {
+      result = await sftp.uploadFile({ filename, localPath, remotePath });
+      await sftp.removeFile({ filename, remotePath });
+      result = await sftp.uploadFile({ filename, localPath, remotePath });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeUndefined();
+      expect(result).toEqual(expect.stringContaining('was successfully uploaded'));
+
+      await sftp.removeDir({ remotePath });
+    }
+  });
+
+  test('should create a file in the FTP server with no content', async () => {
+    const filename = '2020-09-10.txt';
+    const remotePath = '/echoes/tmp';
+
+    let result;
+    let err;
+    try {
+      result = await sftp.createFile({ filename, remotePath });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeUndefined();
+      expect(result).toEqual(expect.stringContaining('Uploaded data stream'));
+
+      await sftp.removeDir({ remotePath });
+    }
+  });
+
+  test('should create a file in the FTP server with some content', async () => {
+    const filename = '2020-09-10.txt';
+    const remotePath = '/echoes/tmp';
+
+    let result;
+    let err;
+    try {
+      result = await sftp.createFile({ filename, remotePath, content: 'some content' });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeUndefined();
+      expect(result).toEqual(expect.stringContaining('Uploaded data stream'));
+
+      await sftp.removeDir({ remotePath });
+    }
+  });
+
+  test('should throw when appending to remote file if the file does not exist in the FTP server', async () => {
+    const filename = 'daily.csv';
+    const remotePath = '/echoes/tmp';
+
+    let err;
+    try {
+      await sftp.appendToFile({ remotePath, filename, content: 'some content\n' });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeDefined();
+      expect(err.message).toEqual(expect.stringContaining('Bad path'));
+    }
+  });
+
+  test('should append to remote file if the file exists in the FTP server', async () => {
+    const filename = 'daily.csv';
+    const remotePath = '/echoes/tmp';
+    const localPath = path.join(__dirname, '../../fixtures/original/echoes/');
+
+    let result;
+    let err;
+    try {
+      await sftp.uploadFile({ filename, localPath, remotePath });
+      result = await sftp.appendToFile({ remotePath, filename, content: 'some content\n' });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeUndefined();
+      expect(result).toEqual(expect.stringContaining('Uploaded data stream'));
+
+      await sftp.removeDir({ remotePath });
+    }
+  });
+
+  test('should return false when the file does not exist in th FTP server', async () => {
+    const filename = 'daily.csv';
+    const remotePath = '/echoes/tmp';
+
+    let result;
+    let err;
+    try {
+      result = await sftp.checkFileExists({ filename, remotePath });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeUndefined();
+      expect(result).toEqual(false);
+    }
+  });
+
+  test('should return true when the file exist in th FTP server', async () => {
+    const filename = 'daily.csv';
+    const remotePath = '/echoes/tmp';
+
+    let result;
+    let err;
+    try {
+      await sftp.createFile({ filename, remotePath });
+      result = await sftp.checkFileExists({ filename, remotePath });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeUndefined();
+      expect(result).toEqual(true);
+
+      await sftp.removeDir({ remotePath });
+    }
   });
 });

@@ -65,7 +65,55 @@ module.exports = () => {
       }
     };
 
-    return { uploadFile, removeDir, removeFile };
+    const createFile = async ({ filename, remotePath, content = '' }) => {
+      await connect();
+
+      try {
+        const remoteFilePath = path.join(remotePath, filename);
+        await client.mkdir(remotePath, true);
+        const result = await client.put(Buffer.from(content), remoteFilePath);
+        return result;
+      } catch (error) {
+        logger.error(`Error creating file | Filename ${filename} | Error ${error.stack}`);
+        throw error;
+      } finally {
+        await client.end();
+      }
+    };
+
+    const appendToFile = async ({ filename, remotePath, content }) => {
+      await connect();
+
+      try {
+        const remoteFilePath = path.join(remotePath, filename);
+        const result = await client.append(Buffer.from(content), remoteFilePath);
+        return result;
+      } catch (error) {
+        logger.error(`Error appending content to file in SFTP server | Error ${error.stack}`);
+        throw error;
+      } finally {
+        await client.end();
+      }
+    };
+
+    const checkFileExists = async ({ filename, remotePath }) => {
+      await connect();
+
+      try {
+        const remoteFilePath = path.join(remotePath, filename);
+        const fileExists = await client.exists(remoteFilePath);
+        return !!fileExists;
+      } catch (error) {
+        logger.error(`Error checking if file exists | Filename ${filename} | Error ${error.stack}`);
+        throw error;
+      } finally {
+        await client.end();
+      }
+    };
+
+    return {
+      uploadFile, removeDir, removeFile, createFile, appendToFile, checkFileExists,
+    };
   };
 
   return { start };

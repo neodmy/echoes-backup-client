@@ -50,6 +50,7 @@
     "chalk": "^3.0.0",
     "confabulous": "^1.7.0",
     "cross-env": "^7.0.2",
+    "csvtojson": "^2.0.10",
     "debug": "^4.1.1",
     "dotenv": "^8.2.0",
     "ejs": "^3.1.5",
