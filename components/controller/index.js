@@ -12,4 +12,4 @@ module.exports = new System({ name: 'controller' })
   .add('csv', initCsvController())
   .dependsOn({ component: 'config', source: 'controller' }, 'logger', 'archiver', 'store', 'slack', 'sftp')
   .add('controller', initController())
-  .dependsOn('config', 'logger', 'archiver', 'compressor', 'uploader', 'csv', 'store');
+  .dependsOn('config', 'logger', 'archiver', 'uploader', 'csv', 'store');
