@@ -8,6 +8,7 @@ const archiverMock = require('../../mocks/archiverMock');
 const storeMock = require('../../mocks/storeMock');
 const compressorMock = require('../../mocks/compressorMock');
 const uploaderMock = require('../../mocks/uploaderMock');
+const csvMock = require('../../mocks/csvMock');
 
 const {
   controller: { removalOffset, localPath },
@@ -18,6 +19,7 @@ describe('Controller component tests', () => {
   let controller;
   let uploader;
   let compressor;
+  let csv;
   let archiver;
   let store;
 
@@ -28,8 +30,9 @@ describe('Controller component tests', () => {
     sys.set('store', storeMock());
     sys.set('compressor', compressorMock());
     sys.set('uploader', uploaderMock());
+    sys.set('csv', csvMock());
     ({
-      controller, archiver, uploader, compressor, store,
+      controller, archiver, uploader, compressor, csv, store,
     } = await sys.start());
   });
 
@@ -201,6 +204,99 @@ describe('Controller component tests', () => {
     });
   });
 
+  describe('processFileToExtractCsvData', () => {
+    test('should extract CSV data, compress and upload a file', async () => {
+      const filename = '2020-10-09';
+
+      let err;
+      try {
+        await controller.processFileToExtractCsvData(filename);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(1);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(1);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(1);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+      }
+    });
+
+    test('should handle an error extracting CSV data and not to try compress and upload the file', async () => {
+      const filename = '2020-10-09';
+
+      csv.handleCsvData.mockRejectedValueOnce(new Error());
+
+      let err;
+      try {
+        await controller.processFileToExtractCsvData(filename);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(1);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(filename);
+
+        expect(compressor.handleCompression).not.toHaveBeenCalled();
+
+        expect(uploader.handleUpload).not.toHaveBeenCalled();
+      }
+    });
+
+    test('should extract CSV data, handle a compression failure and not to try uploading the file', async () => {
+      const filename = '2020-10-09';
+
+      compressor.handleCompression.mockRejectedValueOnce(new Error());
+
+      let err;
+      try {
+        await controller.processFileToExtractCsvData(filename);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(1);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(1);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+
+        expect(uploader.handleUpload).not.toHaveBeenCalled();
+      }
+    });
+
+    test('should extract CSV data, compress the file and handle an upload failure', async () => {
+      const filename = '2020-10-09';
+
+      uploader.handleUpload.mockRejectedValueOnce(new Error());
+
+      let err;
+      try {
+        await controller.processFileToExtractCsvData(filename);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(1);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(1);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(filename);
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(1);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(filename);
+      }
+    });
+  });
+
   describe('processFileToCompress', () => {
     test('should compress and upload a file', async () => {
       const filename = '2020-10-09';
@@ -264,7 +360,21 @@ describe('Controller component tests', () => {
   });
 
   describe('processRetries', () => {
-    test('should compress and upload two files, and upload two other files', async () => {
+    test('should process, compress and upload two files; compress and upload two other files; and upload two other files', async () => {
+      const fileToProcessCsv1 = {
+        filename: '2020-09-08',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToProcessCsv2 = {
+        filename: '2020-09-09',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
       const fileToCompress1 = {
         filename: '2020-09-10',
         status: 'failed_to_compress',
@@ -293,6 +403,7 @@ describe('Controller component tests', () => {
         retries: 2,
       };
 
+      store.getAll.mockResolvedValueOnce([fileToProcessCsv1, fileToProcessCsv2]);
       store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
       store.getAll.mockResolvedValueOnce([fileToUpload1, fileToUpload2]);
 
@@ -304,11 +415,19 @@ describe('Controller component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(4);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv2.filename);
         expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress1.filename);
         expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress2.filename);
 
-        expect(uploader.handleUpload).toHaveBeenCalledTimes(4);
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(6);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv1.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress1.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress2.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload1.filename);
@@ -316,7 +435,21 @@ describe('Controller component tests', () => {
       }
     });
 
-    test('should handle a compress failure, compress and upload other file, and upload two other files', async () => {
+    test('should handle a process failure;  process, compress and upload other file; compress and upload two other files; and upload two other files', async () => {
+      const fileToProcessCsv1 = {
+        filename: '2020-09-08',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToProcessCsv2 = {
+        filename: '2020-09-09',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
       const fileToCompress1 = {
         filename: '2020-09-10',
         status: 'failed_to_compress',
@@ -345,9 +478,10 @@ describe('Controller component tests', () => {
         retries: 2,
       };
 
+      store.getAll.mockResolvedValueOnce([fileToProcessCsv1, fileToProcessCsv2]);
       store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
       store.getAll.mockResolvedValueOnce([fileToUpload1, fileToUpload2]);
-      compressor.handleCompression.mockRejectedValueOnce(new Error());
+      csv.handleCsvData.mockRejectedValueOnce(new Error());
 
       let err;
       try {
@@ -357,63 +491,17 @@ describe('Controller component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(3);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv2.filename);
         expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress1.filename);
         expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress2.filename);
 
-        expect(uploader.handleUpload).toHaveBeenCalledTimes(3);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress2.filename);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload1.filename);
-        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload2.filename);
-      }
-    });
-
-    test('should compress and upload a file, compress and handle an upload failure for other file, and upload two other files', async () => {
-      const fileToCompress1 = {
-        filename: '2020-09-10',
-        status: 'failed_to_compress',
-        date: new Date().toISOString(),
-        retries: 1,
-      };
-
-      const fileToCompress2 = {
-        filename: '2020-09-11',
-        status: 'failed_to_compress',
-        date: new Date().toISOString(),
-        retries: 2,
-      };
-
-      const fileToUpload1 = {
-        filename: '2020-09-12',
-        status: 'failed_to_send',
-        date: new Date().toISOString(),
-        retries: 1,
-      };
-
-      const fileToUpload2 = {
-        filename: '2020-09-13',
-        status: 'failed_to_send',
-        date: new Date().toISOString(),
-        retries: 2,
-      };
-
-      store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
-      store.getAll.mockResolvedValueOnce([fileToUpload1, fileToUpload2]);
-      uploader.handleUpload.mockRejectedValueOnce(new Error());
-
-      let err;
-      try {
-        await controller.processRetries();
-      } catch (error) {
-        err = error;
-      } finally {
-        expect(err).toBeUndefined();
-
-        expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
-        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress1.filename);
-        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress2.filename);
-
-        expect(uploader.handleUpload).toHaveBeenCalledTimes(4);
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(5);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv2.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress1.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress2.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload1.filename);
@@ -421,7 +509,21 @@ describe('Controller component tests', () => {
       }
     });
 
-    test('should compress and upload two files, upload other file, and handle an upload failure for other file', async () => {
+    test('should process a file, and handle a compress failure;  process, compress and upload other file; compress and upload two other files; and upload two other files', async () => {
+      const fileToProcessCsv1 = {
+        filename: '2020-09-08',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToProcessCsv2 = {
+        filename: '2020-09-09',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
       const fileToCompress1 = {
         filename: '2020-09-10',
         status: 'failed_to_compress',
@@ -450,9 +552,16 @@ describe('Controller component tests', () => {
         retries: 2,
       };
 
+      store.getAll.mockResolvedValueOnce([fileToProcessCsv1, fileToProcessCsv2]);
       store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
       store.getAll.mockResolvedValueOnce([fileToUpload1, fileToUpload2]);
-      uploader.handleUpload.mockRejectedValueOnce(new Error());
+
+      compressor.handleCompression.mockImplementation(filename => {
+        if (filename === fileToProcessCsv1.filename) {
+          return Promise.reject();
+        }
+        return Promise.resolve();
+      });
 
       let err;
       try {
@@ -462,15 +571,358 @@ describe('Controller component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(compressor.handleCompression).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(4);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv2.filename);
         expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress1.filename);
         expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress2.filename);
 
-        expect(uploader.handleUpload).toHaveBeenCalledTimes(4);
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(5);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv2.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress1.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress2.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload1.filename);
         expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload2.filename);
+
+        // reset mock
+        compressor.handleCompression.mockResolvedValue();
+      }
+    });
+
+    test('should process and compress a file, and handle an upload failure;  process, compress and upload other file; compress and upload two other files; and upload two other files', async () => {
+      const fileToProcessCsv1 = {
+        filename: '2020-09-08',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToProcessCsv2 = {
+        filename: '2020-09-09',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      const fileToCompress1 = {
+        filename: '2020-09-10',
+        status: 'failed_to_compress',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToCompress2 = {
+        filename: '2020-09-11',
+        status: 'failed_to_compress',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      const fileToUpload1 = {
+        filename: '2020-09-12',
+        status: 'failed_to_send',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToUpload2 = {
+        filename: '2020-09-13',
+        status: 'failed_to_send',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      store.getAll.mockResolvedValueOnce([fileToProcessCsv1, fileToProcessCsv2]);
+      store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
+      store.getAll.mockResolvedValueOnce([fileToUpload1, fileToUpload2]);
+
+      uploader.handleUpload.mockImplementation(filename => {
+        if (filename === fileToProcessCsv1.filename) {
+          return Promise.reject();
+        }
+        return Promise.resolve();
+      });
+
+      let err;
+      try {
+        await controller.processRetries();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(4);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress2.filename);
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(6);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress2.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload2.filename);
+
+        // reset mock
+        uploader.handleUpload.mockResolvedValue();
+      }
+    });
+
+    test('should process, compress and upload two files; handle a compress failure, compress and upload other file; and upload two other files', async () => {
+      const fileToProcessCsv1 = {
+        filename: '2020-09-08',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToProcessCsv2 = {
+        filename: '2020-09-09',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      const fileToCompress1 = {
+        filename: '2020-09-10',
+        status: 'failed_to_compress',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToCompress2 = {
+        filename: '2020-09-11',
+        status: 'failed_to_compress',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      const fileToUpload1 = {
+        filename: '2020-09-12',
+        status: 'failed_to_send',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToUpload2 = {
+        filename: '2020-09-13',
+        status: 'failed_to_send',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      store.getAll.mockResolvedValueOnce([fileToProcessCsv1, fileToProcessCsv2]);
+      store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
+      store.getAll.mockResolvedValueOnce([fileToUpload1, fileToUpload2]);
+      compressor.handleCompression.mockImplementation(filename => {
+        if (filename === fileToCompress1.filename) {
+          throw new Error();
+        }
+      });
+
+      let err;
+      try {
+        await controller.processRetries();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(4);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress2.filename);
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(5);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress2.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload2.filename);
+
+        // reset mock
+        compressor.handleCompression.mockResolvedValue();
+      }
+    });
+
+    test('should process, compress and upload two files; compress and upload a file, compress and handle an upload failure for other file; and upload two other files', async () => {
+      const fileToProcessCsv1 = {
+        filename: '2020-09-08',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToProcessCsv2 = {
+        filename: '2020-09-09',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      const fileToCompress1 = {
+        filename: '2020-09-10',
+        status: 'failed_to_compress',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToCompress2 = {
+        filename: '2020-09-11',
+        status: 'failed_to_compress',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      const fileToUpload1 = {
+        filename: '2020-09-12',
+        status: 'failed_to_send',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToUpload2 = {
+        filename: '2020-09-13',
+        status: 'failed_to_send',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      store.getAll.mockResolvedValueOnce([fileToProcessCsv1, fileToProcessCsv2]);
+      store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
+      store.getAll.mockResolvedValueOnce([fileToUpload1, fileToUpload2]);
+      uploader.handleUpload.mockImplementation(filename => {
+        if (filename === fileToCompress1.filename) {
+          throw new Error();
+        }
+      });
+
+      let err;
+      try {
+        await controller.processRetries();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(4);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress2.filename);
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(6);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress2.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload2.filename);
+
+        // reset mock
+        uploader.handleUpload.mockResolvedValue();
+      }
+    });
+
+    test('should process, compress and upload two files; compress and upload two files; upload other file, and handle an upload failure for other file', async () => {
+      const fileToProcessCsv1 = {
+        filename: '2020-09-08',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToProcessCsv2 = {
+        filename: '2020-09-09',
+        status: 'failed_to_extract_csv',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      const fileToCompress1 = {
+        filename: '2020-09-10',
+        status: 'failed_to_compress',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToCompress2 = {
+        filename: '2020-09-11',
+        status: 'failed_to_compress',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      const fileToUpload1 = {
+        filename: '2020-09-12',
+        status: 'failed_to_send',
+        date: new Date().toISOString(),
+        retries: 1,
+      };
+
+      const fileToUpload2 = {
+        filename: '2020-09-13',
+        status: 'failed_to_send',
+        date: new Date().toISOString(),
+        retries: 2,
+      };
+
+      store.getAll.mockResolvedValueOnce([fileToProcessCsv1, fileToProcessCsv2]);
+      store.getAll.mockResolvedValueOnce([fileToCompress1, fileToCompress2]);
+      store.getAll.mockResolvedValueOnce([fileToUpload1, fileToUpload2]);
+      uploader.handleUpload.mockImplementation(filename => {
+        if (filename === fileToUpload1.filename) {
+          throw new Error();
+        }
+      });
+
+      let err;
+      try {
+        await controller.processRetries();
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(csv.handleCsvData).toHaveBeenCalledTimes(2);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(csv.handleCsvData).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+
+        expect(compressor.handleCompression).toHaveBeenCalledTimes(4);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress1.filename);
+        expect(compressor.handleCompression).toHaveBeenCalledWith(fileToCompress2.filename);
+
+        expect(uploader.handleUpload).toHaveBeenCalledTimes(6);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToProcessCsv2.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToCompress2.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload1.filename);
+        expect(uploader.handleUpload).toHaveBeenCalledWith(fileToUpload2.filename);
+
+        // reset mock
+        uploader.handleUpload.mockResolvedValue();
       }
     });
   });

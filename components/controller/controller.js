@@ -5,7 +5,7 @@ const { shouldRemove } = require('../../util');
 
 module.exports = () => {
   const start = async ({
-    config, logger, archiver, compressor, uploader, store,
+    config, logger, archiver, compressor, uploader, csv, store,
   }) => {
     debug('Initializing controller');
     const { localPath, removalOffset } = config;
@@ -21,12 +21,15 @@ module.exports = () => {
             const isFileToProcess = /^(19|20)\d\d([- /.])(0[1-9]|1[012])\2(0[1-9]|[12][0-9]|3[01])$/.test(filenameWithoutExtension);
             if (isFileToProcess) {
               logger.info(`Synchronizing file | Filename ${filename}`);
-              if (!filename.includes('zip')) await compressor.handleCompression(filenameWithoutExtension);
+              if (!filename.includes('zip')) {
+                await csv.handleCsvData(filenameWithoutExtension);
+                await compressor.handleCompression(filenameWithoutExtension);
+              }
               await uploader.handleUpload(filenameWithoutExtension);
               logger.info(`File synchornization has been completed | Filename ${filename}`);
             }
           } catch (error) {
-            logger.error(error.message);
+            logger.error(`Error synchronizing file | Filename ${filename} | Error ${error}`);
           }
         });
 
@@ -34,6 +37,18 @@ module.exports = () => {
         logger.info('Initial synchronization has finished successfully');
       } catch (error) {
         logger.error(`Initial synchronization could not be done | Error ${error}`);
+      }
+    };
+
+    const processFileToExtractCsvData = async filename => {
+      try {
+        logger.info(`Processing file to extract CSV data, compress and upload | File ${filename}`);
+        await csv.handleCsvData(filename);
+        await compressor.handleCompression(filename);
+        await uploader.handleUpload(filename);
+        logger.info(`File to extract CSV data, compress and upload completed successfully | File ${filename}`);
+      } catch (error) {
+        logger.error(`Error extracting CSV data, compressing and uploading file | File ${filename} | Error ${error}`);
       }
     };
 
@@ -61,16 +76,24 @@ module.exports = () => {
     const processRetries = async () => {
       try {
         logger.info('Processing retries');
+        const fileToExtracCsvData = await store.getAll({ status: 'failed_to_extract_csv' });
         const filesToCompress = await store.getAll({ status: 'failed_to_compress' });
         const filesToSend = await store.getAll({ status: 'failed_to_send' });
+
+        const processFilesToExtractCsvData = fileToExtracCsvData.map(({ filename }) => processFileToExtractCsvData(filename));
 
         const processFilesToCompress = filesToCompress.map(({ filename }) => processFileToCompress(filename));
 
         const processFilesToSend = filesToSend.map(({ filename }) => processFileToSend(filename));
 
+        logger.info('Processing retries to extract CSV data, compress and upload');
+        await Promise.all(processFilesToExtractCsvData);
+        logger.info('Retries to extract CSV data, compress and upload have finished successfully');
+
         logger.info('Processing retries to compress and upload');
         await Promise.all(processFilesToCompress);
         logger.info('Retries to compress and upload have finished successfully');
+
         logger.info('Processing retries to upload');
         await Promise.all(processFilesToSend);
         logger.info('Retries to upload have finished successfully');
@@ -108,6 +131,7 @@ module.exports = () => {
 
     return {
       init,
+      processFileToExtractCsvData,
       processFileToCompress,
       processRetries,
       deleteOldFiles,
