@@ -43,7 +43,7 @@ describe('Uploader component tests', () => {
       const sentStatus = 'sent';
 
       store.getOne.mockResolvedValueOnce(null);
-      sftp.uploadFile.mockRejectedValueOnce(new Error('Error uploading file to SFTP'));
+      sftp.uploadDir.mockRejectedValueOnce(new Error('Error uploading file to SFTP'));
 
       let err;
       try {
@@ -54,7 +54,7 @@ describe('Uploader component tests', () => {
         expect(err).toBeDefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
 
         expect(store.deleteOne).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalledWith({ filename, status: sentStatus });
@@ -70,7 +70,7 @@ describe('Uploader component tests', () => {
       const sentStatus = 'sent';
 
       store.getOne.mockResolvedValueOnce(null);
-      sftp.uploadFile.mockResolvedValueOnce();
+      sftp.uploadDir.mockResolvedValueOnce();
 
       let err;
       try {
@@ -81,7 +81,7 @@ describe('Uploader component tests', () => {
         expect(err).toBeUndefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
 
         expect(store.deleteOne).not.toHaveBeenCalled();
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: sentStatus });
@@ -99,7 +99,7 @@ describe('Uploader component tests', () => {
       store.getOne.mockResolvedValueOnce({
         filename, status: failStatus, retries: 1,
       });
-      sftp.uploadFile.mockRejectedValueOnce(new Error('Error uploading file to SFTP'));
+      sftp.uploadDir.mockRejectedValueOnce(new Error('Error uploading file to SFTP'));
 
       let err;
       try {
@@ -110,7 +110,7 @@ describe('Uploader component tests', () => {
         expect(err).toBeDefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
 
         expect(store.deleteOne).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalledWith({ filename, status: sentStatus });
@@ -128,7 +128,7 @@ describe('Uploader component tests', () => {
       store.getOne.mockResolvedValueOnce({
         filename, status: failStatus, retries: 1,
       });
-      sftp.uploadFile.mockResolvedValueOnce();
+      sftp.uploadDir.mockResolvedValueOnce();
 
       let err;
       try {
@@ -139,7 +139,7 @@ describe('Uploader component tests', () => {
         expect(err).toBeUndefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadFile).toHaveBeenCalledWith({ filename: `${filename}.zip`, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
 
         expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: sentStatus });
