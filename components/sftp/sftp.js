@@ -35,6 +35,21 @@ module.exports = () => {
       }
     };
 
+    const uploadDir = async ({ dirName, localPath, remotePath }) => {
+      await connect();
+
+      try {
+        const result = await client.uploadDir(path.join(localPath, dirName), path.join(remotePath, dirName));
+        logger.info(`Uploading directory ${dirName} to server | Result ${result}`);
+        return result;
+      } catch (error) {
+        logger.error(`Error uploading directory to SFTP server | Error ${error.stack}`);
+        throw error;
+      } finally {
+        await client.end();
+      }
+    };
+
     const removeDir = async ({ remotePath }) => {
       await connect();
 
@@ -112,7 +127,7 @@ module.exports = () => {
     };
 
     return {
-      uploadFile, removeDir, removeFile, createFile, appendToFile, checkFileExists,
+      uploadFile, uploadDir, removeDir, removeFile, createFile, appendToFile, checkFileExists,
     };
   };
 

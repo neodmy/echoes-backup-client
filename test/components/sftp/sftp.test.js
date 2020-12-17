@@ -73,6 +73,40 @@ describe('Sftp component tests', () => {
     }
   });
 
+  test('should fail when the local directory does not exists', async () => {
+    const dirName = 'not_a_directory';
+    const localPath = path.join(__dirname, '../../fixtures/temp/echoes/');
+    const remotePath = '/echoes';
+    let err;
+    try {
+      await sftp.uploadDir({ dirName, localPath, remotePath });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeDefined();
+      expect(err.message).toEqual(expect.stringContaining('No such directory'));
+    }
+  });
+
+  test('should upload a directory when the directory does not exists in the FTP server', async () => {
+    const dirName = '2020-09-10';
+    const localPath = path.join(__dirname, '../../fixtures/original/echoes/');
+    const remotePath = '/echoes/tmp';
+
+    let result;
+    let err;
+    try {
+      result = await sftp.uploadDir({ dirName, localPath, remotePath });
+    } catch (error) {
+      err = error;
+    } finally {
+      expect(err).toBeUndefined();
+      expect(result).toEqual(expect.stringContaining('uploaded to /echoes/tmp/2020-09-10'));
+
+      await sftp.removeDir({ remotePath });
+    }
+  });
+
   test('should create a file in the FTP server with no content', async () => {
     const filename = '2020-09-10.txt';
     const remotePath = '/echoes/tmp';
