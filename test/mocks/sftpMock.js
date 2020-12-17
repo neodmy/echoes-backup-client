@@ -6,6 +6,7 @@ module.exports = () => {
     createFile: jest.fn(),
     appendToFile: jest.fn(),
     checkFileExists: jest.fn(),
+    uploadDir: jest.fn(),
   });
 
   return { start };
