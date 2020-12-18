@@ -3,7 +3,8 @@ version: "3.5"
 services:
   echoes-backup-client:
     build:
-      context: ./Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name:  echoes-backup-client
     environment:
       # SLACK
@@ -21,11 +22,13 @@ services:
       CLIENT_ID: client
       REMOVAL_OFFSET: 21
       # DATABASE
-      MONGO_CONNECTION_STRING: mongodb://mongo-echoes-backup-client:27018
+      MONGO_CONNECTION_STRING: mongodb://mongo-echoes-backup-client:27017
     ports:
       - "4000:4000"
     volumes:
       - /home/meteoros20/echoes:/echoes
+    depends_on:
+      - mongo
   mongo:
     image: mongo:3.6
     container_name: mongo-echoes-backup-client
