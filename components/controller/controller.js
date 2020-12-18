@@ -1,7 +1,7 @@
 const debug = require('debug')('service:task-controller');
 const path = require('path');
 
-const { shouldRemove } = require('../../util');
+const { shouldRemove, asyncForEach } = require('../../util');
 
 module.exports = () => {
   const start = async ({
@@ -15,7 +15,7 @@ module.exports = () => {
         logger.info('Initial synchronization of all files');
         const filenames = await archiver.getDirectoryContent(localPath);
 
-        const processFilePromises = filenames.map(async filename => {
+        const processFile = async filename => {
           try {
             const isFileToProcess = /^(19|20)\d\d([- /.])(0[1-9]|1[012])\2(0[1-9]|[12][0-9]|3[01])$/.test(filename);
             if (isFileToProcess) {
@@ -27,9 +27,9 @@ module.exports = () => {
           } catch (error) {
             logger.error(`Error synchronizing file | Filename ${filename} | Error ${error}`);
           }
-        });
+        };
 
-        await Promise.all(processFilePromises);
+        await asyncForEach(filenames, processFile);
         logger.info('Initial synchronization has finished successfully');
       } catch (error) {
         logger.error(`Initial synchronization could not be done | Error ${error}`);
@@ -63,16 +63,16 @@ module.exports = () => {
         const fileToExtracCsvData = await store.getAll({ status: 'failed_to_extract_csv' });
         const filesToSend = await store.getAll({ status: 'failed_to_send' });
 
-        const processFilesToExtractCsvData = fileToExtracCsvData.map(({ filename }) => processFileToExtractCsvData(filename));
+        const processCsvData = ({ filename }) => processFileToExtractCsvData(filename);
 
-        const processFilesToSend = filesToSend.map(({ filename }) => processFileToSend(filename));
+        const processUploadData = ({ filename }) => processFileToSend(filename);
 
         logger.info('Processing retries to extract CSV data, compress and upload');
-        await Promise.all(processFilesToExtractCsvData);
+        await asyncForEach(fileToExtracCsvData, processCsvData);
         logger.info('Retries to extract CSV data, compress and upload have finished successfully');
 
         logger.info('Processing retries to upload');
-        await Promise.all(processFilesToSend);
+        await asyncForEach(filesToSend, processUploadData);
         logger.info('Retries to upload have finished successfully');
       } catch (error) {
         logger.error(`Error processing retries | Error ${error}`);
@@ -84,7 +84,7 @@ module.exports = () => {
         logger.info('Deleting old files');
         const sentFiles = await store.getAll({ status: 'sent' });
 
-        const deleteFilePromises = sentFiles.map(async ({ filename, status }) => {
+        const deleteFile = async ({ filename, status }) => {
           try {
             if (shouldRemove(filename, removalOffset)) {
               logger.info(`Deleting old file | Filename ${filename}`);
@@ -96,9 +96,9 @@ module.exports = () => {
           } catch (error) {
             logger.error(`Error deleting file | File deletion will be retried in the next execution | Filename ${filename} | Error ${error}`);
           }
-        });
+        };
 
-        await Promise.all(deleteFilePromises);
+        await asyncForEach(sentFiles, deleteFile);
 
         logger.info('Old files to delete have finished successfully');
       } catch (error) {
