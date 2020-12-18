@@ -17,6 +17,15 @@ module.exports = () => {
       }
     };
 
+    const end = async () => {
+      try {
+        await client.end();
+      } catch (error) {
+        logger.error(`Error ending SFTP server connection | Error ${error.stack}`);
+        throw error;
+      }
+    };
+
     const uploadFile = async ({ filename, localPath, remotePath }) => {
       await connect();
 
@@ -31,7 +40,7 @@ module.exports = () => {
         logger.error(`Error uploading file to SFTP server | Error ${error.stack}`);
         throw error;
       } finally {
-        await client.end();
+        await end();
       }
     };
 
@@ -46,7 +55,7 @@ module.exports = () => {
         logger.error(`Error uploading directory to SFTP server | Error ${error.stack}`);
         throw error;
       } finally {
-        await client.end();
+        await end();
       }
     };
 
@@ -61,7 +70,7 @@ module.exports = () => {
         logger.error(`Error deleting directory in SFTP server | Error ${error.stack}`);
         throw error;
       } finally {
-        await client.end();
+        await end();
       }
     };
 
@@ -76,7 +85,7 @@ module.exports = () => {
         logger.error(`Error deleting file in SFTP server | Error ${error.stack}`);
         throw error;
       } finally {
-        await client.end();
+        await end();
       }
     };
 
@@ -92,7 +101,7 @@ module.exports = () => {
         logger.error(`Error creating file | Filename ${filename} | Error ${error.stack}`);
         throw error;
       } finally {
-        await client.end();
+        await end();
       }
     };
 
@@ -107,7 +116,7 @@ module.exports = () => {
         logger.error(`Error appending content to file in SFTP server | Error ${error.stack}`);
         throw error;
       } finally {
-        await client.end();
+        await end();
       }
     };
 
@@ -122,7 +131,7 @@ module.exports = () => {
         logger.error(`Error checking if file exists | Filename ${filename} | Error ${error.stack}`);
         throw error;
       } finally {
-        await client.end();
+        await end();
       }
     };
 
