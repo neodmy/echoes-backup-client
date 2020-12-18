@@ -42,8 +42,10 @@ describe('Csv component tests', () => {
       const filename = '2020-09-15';
       const failStatus = 'failed_to_extract_csv';
 
-      store.getOne.mockResolvedValueOnce(null);
-      archiver.getDirectoryContent.mockResolvedValueOnce(['daily.csv', 'something.txt']);
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
+      archiver.getDirectoryContent.mockResolvedValueOnce(['something.txt']);
 
       let err;
       try {
@@ -73,7 +75,9 @@ describe('Csv component tests', () => {
       const copiedFixture = path.join(__dirname, `../../fixtures/temp/echoes/${dailyCsv}`);
       fs.copySync(originalFixture, copiedFixture);
 
-      store.getOne.mockResolvedValueOnce(null);
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
       archiver.getDirectoryContent.mockResolvedValueOnce(['daily.csv', 'something.txt']);
 
       let err;
@@ -83,6 +87,7 @@ describe('Csv component tests', () => {
         err = error;
       } finally {
         expect(err).toBeDefined();
+        expect(err.message).toMatch('Line for filename does not exist in CSV daily report');
 
         expect(sftp.checkFileExists).not.toHaveBeenCalled();
         expect(sftp.appendToFile).not.toHaveBeenCalled();
@@ -105,7 +110,9 @@ describe('Csv component tests', () => {
 
       const expectedContent = 'mié. sept. 9 2020;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-110,58;-126,36;9;5;3;1;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-110,58;-126,36;9;5;3;1;|\n';
 
-      store.getOne.mockResolvedValueOnce(null);
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
       archiver.getDirectoryContent.mockResolvedValueOnce(['daily.csv', 'something.txt']);
       sftp.checkFileExists.mockResolvedValueOnce(true);
 
@@ -122,7 +129,7 @@ describe('Csv component tests', () => {
         expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
-        expect(store.upsertOne).not.toHaveBeenCalled();
+        expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: 'csv_processed' });
 
         fs.removeSync(copiedFixture);
       }
@@ -140,7 +147,9 @@ describe('Csv component tests', () => {
       const expectedFilenameRow = 'mié. sept. 9 2020;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-110,58;-126,36;9;5;3;1;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-110,58;-126,36;9;5;3;1;|\n';
       const expectedContent = `${expectHeader}${expectedColumns}${expectedFilenameRow}`;
 
-      store.getOne.mockResolvedValueOnce(null);
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
       archiver.getDirectoryContent.mockResolvedValueOnce(['daily.csv', 'something.txt']);
       sftp.checkFileExists.mockResolvedValueOnce(false);
 
@@ -157,7 +166,7 @@ describe('Csv component tests', () => {
         expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
-        expect(store.upsertOne).not.toHaveBeenCalled();
+        expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: 'csv_processed' });
 
         fs.removeSync(copiedFixture);
       }
@@ -167,14 +176,16 @@ describe('Csv component tests', () => {
       const filename = '2020-09-15';
       const failStatus = 'failed_to_extract_csv';
 
-      store.getOne.mockResolvedValueOnce({
-        _id: expect.any(String),
-        filename,
-        status: failStatus,
-        retries: 1,
-        date: expect.any(Date),
-      });
-      archiver.getDirectoryContent.mockResolvedValueOnce(['daily.csv', 'something.txt']);
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          _id: expect.any(String),
+          filename,
+          status: failStatus,
+          retries: 1,
+          date: expect.any(Date),
+        });
+      archiver.getDirectoryContent.mockResolvedValueOnce(['something.txt']);
 
       let err;
       try {
@@ -203,13 +214,15 @@ describe('Csv component tests', () => {
       const copiedFixture = path.join(__dirname, `../../fixtures/temp/echoes/${dailyCsv}`);
       fs.copySync(originalFixture, copiedFixture);
 
-      store.getOne.mockResolvedValueOnce({
-        _id: expect.any(String),
-        filename,
-        status: failStatus,
-        retries: 1,
-        date: expect.any(Date),
-      });
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          _id: expect.any(String),
+          filename,
+          status: failStatus,
+          retries: 1,
+          date: expect.any(Date),
+        });
       archiver.getDirectoryContent.mockResolvedValueOnce(['daily.csv', 'something.txt']);
 
       let err;
@@ -219,6 +232,7 @@ describe('Csv component tests', () => {
         err = error;
       } finally {
         expect(err).toBeDefined();
+        expect(err.message).toMatch('Line for filename does not exist in CSV daily report');
 
         expect(sftp.checkFileExists).not.toHaveBeenCalled();
         expect(sftp.appendToFile).not.toHaveBeenCalled();
@@ -242,13 +256,15 @@ describe('Csv component tests', () => {
 
       const expectedContent = 'mié. sept. 9 2020;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-110,58;-126,36;9;5;3;1;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-110,58;-126,36;9;5;3;1;|\n';
 
-      store.getOne.mockResolvedValueOnce({
-        _id: expect.any(String),
-        filename,
-        status: failStatus,
-        retries: 1,
-        date: expect.any(Date),
-      });
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          _id: expect.any(String),
+          filename,
+          status: failStatus,
+          retries: 1,
+          date: expect.any(Date),
+        });
       archiver.getDirectoryContent.mockResolvedValueOnce(['daily.csv', 'something.txt']);
       sftp.checkFileExists.mockResolvedValueOnce(true);
 
@@ -265,7 +281,7 @@ describe('Csv component tests', () => {
         expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
 
         expect(postMessageSpy).not.toHaveBeenCalled();
-        expect(store.upsertOne).not.toHaveBeenCalled();
+        expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: 'csv_processed' });
 
         fs.removeSync(copiedFixture);
       }
@@ -285,13 +301,15 @@ describe('Csv component tests', () => {
       const expectedFilenameRow = 'mié. sept. 9 2020;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-110,58;-126,36;9;5;3;1;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-;-;0;0;0;0;|;-110,58;-126,36;9;5;3;1;|\n';
       const expectedContent = `${expectHeader}${expectedColumns}${expectedFilenameRow}`;
 
-      store.getOne.mockResolvedValueOnce({
-        _id: expect.any(String),
-        filename,
-        status: failStatus,
-        retries: 1,
-        date: expect.any(Date),
-      });
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          _id: expect.any(String),
+          filename,
+          status: failStatus,
+          retries: 1,
+          date: expect.any(Date),
+        });
       archiver.getDirectoryContent.mockResolvedValueOnce(['daily.csv', 'something.txt']);
       sftp.checkFileExists.mockResolvedValueOnce(false);
 
@@ -306,6 +324,42 @@ describe('Csv component tests', () => {
         expect(sftp.appendToFile).not.toHaveBeenCalled();
         expect(sftp.createFile).toHaveBeenCalledWith({ filename: 'daily.csv', remotePath: path.join(remotePath, clientId), content: expectedContent });
         expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
+
+        expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: 'csv_processed' });
+
+        fs.removeSync(copiedFixture);
+      }
+    });
+
+    test('should skip the CSV process when the CSV data for a given file has already been done', async () => {
+      const filename = '2020-09-09';
+      const successStatus = 'csv_processed';
+
+      const dailyCsv = 'daily.csv';
+      const originalFixture = path.join(__dirname, `../../fixtures/original/echoes/${dailyCsv}`);
+      const copiedFixture = path.join(__dirname, `../../fixtures/temp/echoes/${dailyCsv}`);
+      fs.copySync(originalFixture, copiedFixture);
+
+      store.getOne
+        .mockResolvedValueOnce({
+          _id: expect.any(String),
+          filename,
+          status: successStatus,
+          date: expect.any(Date),
+        });
+
+      let err;
+      try {
+        await csv.handleCsvData(filename);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(sftp.appendToFile).not.toHaveBeenCalled();
+        expect(sftp.createFile).not.toHaveBeenCalled();
+        expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalled();
