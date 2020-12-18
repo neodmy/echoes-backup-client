@@ -42,7 +42,9 @@ describe('Uploader component tests', () => {
       const failStatus = 'failed_to_send';
       const sentStatus = 'sent';
 
-      store.getOne.mockResolvedValueOnce(null);
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
       sftp.uploadDir.mockRejectedValueOnce(new Error('Error uploading file to SFTP'));
 
       let err;
@@ -69,7 +71,9 @@ describe('Uploader component tests', () => {
       const failStatus = 'failed_to_send';
       const sentStatus = 'sent';
 
-      store.getOne.mockResolvedValueOnce(null);
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
       sftp.uploadDir.mockResolvedValueOnce();
 
       let err;
@@ -96,9 +100,11 @@ describe('Uploader component tests', () => {
       const failStatus = 'failed_to_send';
       const sentStatus = 'sent';
 
-      store.getOne.mockResolvedValueOnce({
-        filename, status: failStatus, retries: 1,
-      });
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          filename, status: failStatus, retries: 1,
+        });
       sftp.uploadDir.mockRejectedValueOnce(new Error('Error uploading file to SFTP'));
 
       let err;
@@ -125,9 +131,11 @@ describe('Uploader component tests', () => {
       const failStatus = 'failed_to_send';
       const sentStatus = 'sent';
 
-      store.getOne.mockResolvedValueOnce({
-        filename, status: failStatus, retries: 1,
-      });
+      store.getOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          filename, status: failStatus, retries: 1,
+        });
       sftp.uploadDir.mockResolvedValueOnce();
 
       let err;
@@ -146,6 +154,32 @@ describe('Uploader component tests', () => {
 
         expect(postMessageSpy).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalledWith(expect.objectContaining({ filename, status: failStatus }));
+      }
+    });
+
+    test('should skip the upload to SFTP server when the file has already been sent', async () => {
+      const filename = '2020-09-01';
+      const sentStatus = 'sent';
+
+      store.getOne
+        .mockResolvedValueOnce({
+          filename, status: sentStatus,
+        });
+
+      let err;
+      try {
+        await uploader.handleUpload(filename);
+      } catch (error) {
+        err = error;
+      } finally {
+        expect(err).toBeUndefined();
+
+        expect(sftp.uploadDir).not.toHaveBeenCalled();
+
+        expect(store.deleteOne).not.toHaveBeenCalled();
+        expect(store.upsertOne).not.toHaveBeenCalled();
+
+        expect(postMessageSpy).not.toHaveBeenCalled();
       }
     });
   });
