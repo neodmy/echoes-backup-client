@@ -18,6 +18,8 @@ module.exports = () => {
     const extractCsvData = async filename => {
       const files = await archiver.getDirectoryContent(localPath);
       const csvFilename = files.find(file => /.+(\.csv)$/.test(file));
+      if (!csvFilename) throw new Error('File does not exist. Check to make sure the file path to your csv is correct.');
+
       const csvFilePath = path.join(localPath, csvFilename);
 
       const jsonContent = await csvtojson({ delimiter: ';', noheader: true }).fromFile(csvFilePath);
@@ -36,10 +38,17 @@ module.exports = () => {
 
     const handleCsvData = async filename => {
       const failStatus = 'failed_to_extract_csv';
+      const sucessStatus = 'csv_processed';
       const remotePathWithClientId = path.join(remotePath, clientId);
 
       let currentRetries;
       try {
+        const processedFile = await store.getOne({ filename, status: sucessStatus });
+        if (processedFile) {
+          logger.info(`Skipping file ${filename} | The CSV for the file has already been processed`);
+          return;
+        }
+
         logger.info(`Extracting CSV data | Filename ${filename}`);
         currentRetries = await getcurrentRetries({ filename, status: failStatus });
 
@@ -58,6 +67,7 @@ module.exports = () => {
         }
 
         if (currentRetries) await store.deleteOne({ filename, status: failStatus });
+        await store.upsertOne({ filename, status: sucessStatus });
         logger.info(`Extraction of CSV data has been completed successfully | Filename ${filename}`);
       } catch (error) {
         logger.error(`Error extracting CSV data. File will be saved for future reprocessing | Filename ${filename} | Error ${error}`);

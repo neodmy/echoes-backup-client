@@ -18,16 +18,23 @@ module.exports = () => {
 
     const handleUpload = async filename => {
       const failStatus = 'failed_to_send';
+      const successStatus = 'sent';
 
       let currentRetries;
       try {
+        const processedFile = await store.getOne({ filename, status: successStatus });
+        if (processedFile) {
+          logger.info(`Skipping file ${filename} | The file has already been sent`);
+          return;
+        }
+
         logger.info(`File upload has started | Filename ${filename}`);
         currentRetries = await getcurrentRetries({ filename, status: failStatus });
 
         await sftp.uploadDir({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
 
         if (currentRetries) await store.deleteOne({ filename, status: failStatus });
-        await store.upsertOne({ filename, status: 'sent' });
+        await store.upsertOne({ filename, status: successStatus });
 
         logger.info(`File upload has been completed successfully | Filename ${filename}`);
       } catch (error) {
