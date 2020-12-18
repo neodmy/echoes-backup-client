@@ -2,11 +2,11 @@ const { WebClient } = require('@slack/web-api');
 
 module.exports = () => {
   const start = async ({ config, logger }) => {
-    const { channel, token, status } = config;
+    const { channel, token } = config;
 
     let postMessage = async () => {};
 
-    if (status === 'active') {
+    if (channel && token) {
       const slackClient = new WebClient(token);
 
       postMessage = async text => {

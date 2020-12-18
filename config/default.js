@@ -12,7 +12,6 @@ module.exports = {
     database: 'echoes-backup',
   },
   slack: {
-    status: process.env.SLACK_STATUS,
     token: process.env.SLACK_TOKEN,
     channel: process.env.SLACK_CHANNEL,
   },
