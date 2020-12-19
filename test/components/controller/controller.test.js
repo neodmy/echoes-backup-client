@@ -467,6 +467,8 @@ describe('Controller component tests', () => {
 
         expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileSent1.filename, status: fileSent1.status });
         expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileSent2.filename, status: fileSent2.status });
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileSent1.filename, status: 'csv_processed' });
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileSent2.filename, status: 'csv_processed' });
       }
     });
 
@@ -498,6 +500,7 @@ describe('Controller component tests', () => {
         expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileSent1.filename));
 
         expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileSent1.filename, status: fileSent1.status });
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileSent1.filename, status: 'csv_processed' });
       }
     });
 
@@ -531,6 +534,7 @@ describe('Controller component tests', () => {
         expect(archiver.deleteFile).toHaveBeenCalledWith(path.join(localPath, fileSent2.filename));
 
         expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileSent2.filename, status: fileSent2.status });
+        expect(store.deleteOne).toHaveBeenCalledWith({ filename: fileSent2.filename, status: 'csv_processed' });
       }
     });
   });

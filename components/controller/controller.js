@@ -97,12 +97,13 @@ module.exports = () => {
         logger.info('Deleting old files');
         const sentFiles = await store.getAll({ status: 'sent' });
 
-        const deleteFile = async ({ filename, status }) => {
+        const deleteFile = async ({ filename }) => {
           try {
             if (shouldRemove(filename, removalOffset)) {
               logger.info(`Deleting old file | Filename ${filename}`);
               await archiver.deleteFile(path.join(localPath, filename));
-              await store.deleteOne({ filename, status });
+              await store.deleteOne({ filename, status: 'sent' });
+              await store.deleteOne({ filename, status: 'csv_processed' });
               logger.info(`Old file has been deleted successfully | Filename ${filename}`);
             }
             logger.info(`File is not older than offset. File will not be deleted | Filename ${filename}`);
