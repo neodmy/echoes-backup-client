@@ -29,6 +29,16 @@ module.exports = {
     initCsv: process.env.INITIAL_CSV || 'inactive',
     initUpload: process.env.INITIAL_UPLOAD || 'inactive',
   },
+  mailer: {
+    senderInfo: {
+      service: process.env.SENDER_SERVICE,
+      auth: {
+        user: process.env.SENDER_USER,
+        pass: process.env.SENDER_PASSWORD,
+      },
+    },
+    reportEmails: process.env.REPORT_EMAILS,
+  },
   routes: {
     admin: {
       swaggerOptions: {

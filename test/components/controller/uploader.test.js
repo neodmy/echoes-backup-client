@@ -5,6 +5,7 @@ const slackMock = require('../../mocks/slackMock');
 const sftpMock = require('../../mocks/sftpMock');
 const archiverMock = require('../../mocks/archiverMock');
 const storeMock = require('../../mocks/storeMock');
+const mailerMock = require('../../mocks/mailerMock');
 
 const {
   controller: {
@@ -18,18 +19,22 @@ describe('Uploader component tests', () => {
   let store;
   let slack;
   let sftp;
+  let mailer;
   let postMessageSpy;
+  let mailerSpy;
 
   beforeAll(async () => {
     sys.set('slack', slackMock());
     sys.set('sftp', sftpMock());
     sys.set('archiver', archiverMock());
     sys.set('store', storeMock());
+    sys.set('mailer', mailerMock());
     ({
-      uploader, store, slack, sftp,
+      uploader, store, slack, sftp, mailer,
     } = await sys.start());
 
     postMessageSpy = jest.spyOn(slack, 'postMessage');
+    mailerSpy = jest.spyOn(mailer, 'sendMail');
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -56,12 +61,13 @@ describe('Uploader component tests', () => {
         expect(err).toBeDefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId, 'echoes_backup') });
 
         expect(store.deleteOne).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalledWith({ filename, status: sentStatus });
 
         expect(postMessageSpy).toHaveBeenCalled();
+        expect(mailerSpy).toHaveBeenCalled();
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 1 });
       }
     });
@@ -85,12 +91,13 @@ describe('Uploader component tests', () => {
         expect(err).toBeUndefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId, 'echoes_backup') });
 
         expect(store.deleteOne).not.toHaveBeenCalled();
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: sentStatus });
 
         expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(mailerSpy).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalledWith(expect.objectContaining({ filename, status: failStatus }));
       }
     });
@@ -116,12 +123,13 @@ describe('Uploader component tests', () => {
         expect(err).toBeDefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId, 'echoes_backup') });
 
         expect(store.deleteOne).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalledWith({ filename, status: sentStatus });
 
         expect(postMessageSpy).toHaveBeenCalled();
+        expect(mailerSpy).toHaveBeenCalled();
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 2 });
       }
     });
@@ -147,12 +155,13 @@ describe('Uploader component tests', () => {
         expect(err).toBeUndefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId, 'echoes_backup') });
 
         expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: sentStatus });
 
         expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(mailerSpy).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalledWith(expect.objectContaining({ filename, status: failStatus }));
       }
     });
@@ -180,6 +189,7 @@ describe('Uploader component tests', () => {
         expect(store.upsertOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(mailerSpy).not.toHaveBeenCalled();
       }
     });
   });
