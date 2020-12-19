@@ -8,21 +8,29 @@ services:
     container_name:  echoes-backup-client
     environment:
       # SLACK
-      SLACK_STATUS: inactive
       SLACK_TOKEN: token
       SLACK_CHANNEL: channel
+
       # SFTP
       SFTP_HOSTNAME: hostname
       SFTP_PORT: 22
       SFTP_USERNAME: username
       SFTP_PASSWORD: password
+
       # DIRECTORIES
       REMOTE_DIRECTORY: /mnt/kepler/meteoros/detecciones
+
       # CLIENT
       CLIENT_ID: client
-      REMOVAL_OFFSET: 21
+      REMOVAL_OFFSET: 0
+
+      # INIT
+      INITIAL_CSV: inactive
+      INITIAL_UPLOAD: inactive
+
       # DATABASE
       MONGO_CONNECTION_STRING: mongodb://mongo-echoes-backup-client:27017
+      
     ports:
       - "4000:4000"
     volumes:
