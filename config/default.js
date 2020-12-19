@@ -8,7 +8,7 @@ module.exports = {
     options: { useUnifiedTopology: true },
   },
   store: {
-    collection: 'fail',
+    collection: 'results',
     database: 'echoes-backup',
   },
   slack: {
@@ -25,7 +25,9 @@ module.exports = {
     clientId: process.env.CLIENT_ID,
     remotePath: process.env.REMOTE_DIRECTORY,
     localPath: '/echoes',
-    removalOffset: process.env.REMOVAL_OFFSET || 1,
+    removalOffset: process.env.REMOVAL_OFFSET,
+    initCsv: process.env.INITIAL_CSV || 'inactive',
+    initUpload: process.env.INITIAL_UPLOAD || 'inactive',
   },
   routes: {
     admin: {

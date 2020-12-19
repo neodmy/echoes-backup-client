@@ -26,5 +26,7 @@ module.exports = {
     remotePath: 'echoes/temp',
     localPath: path.join(__dirname, '..', 'test', 'fixtures', 'temp', 'echoes'),
     removalOffset: 21,
+    initCsv: process.env.INITIAL_CSV || 'active',
+    initUpload: process.env.INITIAL_UPLOAD || 'active',
   },
 };

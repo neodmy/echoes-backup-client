@@ -8,7 +8,9 @@ module.exports = () => {
     config, logger, archiver, uploader, csv, store,
   }) => {
     debug('Initializing controller');
-    const { localPath, removalOffset } = config;
+    const {
+      localPath, removalOffset, initCsv, initUpload,
+    } = config;
 
     const init = async () => {
       try {
@@ -20,8 +22,19 @@ module.exports = () => {
             const isFileToProcess = /^(19|20)\d\d([- /.])(0[1-9]|1[012])\2(0[1-9]|[12][0-9]|3[01])$/.test(filename);
             if (isFileToProcess) {
               logger.info(`Synchronizing file | Filename ${filename}`);
-              await csv.handleCsvData(filename);
-              await uploader.handleUpload(filename);
+
+              if (initCsv === 'active') {
+                await csv.handleCsvData(filename);
+              } else {
+                logger.warn(`Initial CSV process is not active by configuration | Skipping CSV process for file ${filename}`);
+              }
+
+              if (initUpload === 'active') {
+                await uploader.handleUpload(filename);
+              } else {
+                logger.warn(`Initial upload is not active by configuration | Skipping CSV process for file ${filename}`);
+              }
+
               logger.info(`File synchornization has been completed | Filename ${filename}`);
             }
           } catch (error) {
