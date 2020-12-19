@@ -6,6 +6,7 @@ const slackMock = require('../../mocks/slackMock');
 const sftpMock = require('../../mocks/sftpMock');
 const storeMock = require('../../mocks/storeMock');
 const archiverMock = require('../../mocks/archiverMock');
+const mailerMock = require('../../mocks/mailerMock');
 
 const {
   controller: { remotePath, clientId },
@@ -18,19 +19,22 @@ describe('Csv component tests', () => {
   let slack;
   let sftp;
   let csv;
+  let mailer;
   let postMessageSpy;
+  let mailerSpy;
 
   beforeAll(async () => {
     sys.set('slack', slackMock());
     sys.set('sftp', sftpMock());
     sys.set('store', storeMock());
     sys.set('archiver', archiverMock());
-
+    sys.set('mailer', mailerMock());
     ({
-      csv, slack, sftp, archiver, store,
+      csv, slack, sftp, archiver, store, mailer,
     } = await sys.start());
 
     postMessageSpy = jest.spyOn(slack, 'postMessage');
+    mailerSpy = jest.spyOn(mailer, 'sendMail');
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -63,6 +67,7 @@ describe('Csv component tests', () => {
 
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 1 });
         expect(postMessageSpy).toHaveBeenCalled();
+        expect(mailerSpy).toHaveBeenCalled();
       }
     });
 
@@ -96,6 +101,7 @@ describe('Csv component tests', () => {
 
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 1 });
         expect(postMessageSpy).toHaveBeenCalled();
+        expect(mailerSpy).toHaveBeenCalled();
 
         fs.removeSync(copiedFixture);
       }
@@ -129,6 +135,7 @@ describe('Csv component tests', () => {
         expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(mailerSpy).not.toHaveBeenCalled();
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: 'csv_processed' });
 
         fs.removeSync(copiedFixture);
@@ -166,6 +173,7 @@ describe('Csv component tests', () => {
         expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(mailerSpy).not.toHaveBeenCalled();
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: 'csv_processed' });
 
         fs.removeSync(copiedFixture);
@@ -202,6 +210,7 @@ describe('Csv component tests', () => {
 
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 2 });
         expect(postMessageSpy).toHaveBeenCalled();
+        expect(mailerSpy).toHaveBeenCalled();
       }
     });
 
@@ -240,6 +249,7 @@ describe('Csv component tests', () => {
 
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: failStatus, retries: 2 });
         expect(postMessageSpy).toHaveBeenCalled();
+        expect(mailerSpy).toHaveBeenCalled();
 
         fs.removeSync(copiedFixture);
       }
@@ -281,6 +291,7 @@ describe('Csv component tests', () => {
         expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
 
         expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(mailerSpy).not.toHaveBeenCalled();
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: 'csv_processed' });
 
         fs.removeSync(copiedFixture);
@@ -326,6 +337,7 @@ describe('Csv component tests', () => {
         expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
 
         expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(mailerSpy).not.toHaveBeenCalled();
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: 'csv_processed' });
 
         fs.removeSync(copiedFixture);
@@ -362,6 +374,7 @@ describe('Csv component tests', () => {
         expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(mailerSpy).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalled();
 
         fs.removeSync(copiedFixture);
