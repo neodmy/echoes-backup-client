@@ -14,7 +14,6 @@ const die = (message, err) => {
 
 runner(system(), { logger: emergencyLogger }).start((err, components) => {
   if (err) die('Error starting system', err);
-  const { logger, pkg, controller } = components;
+  const { logger, pkg } = components;
   logger.info(`${pkg.name} has started`);
-  controller.init();
 });
