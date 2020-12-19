@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = () => {
   const start = async ({
-    config, logger, store, slack, sftp,
+    config, logger, store, slack, sftp, mailer,
   }) => {
     debug('Initializing uploader controller');
     const {
@@ -38,8 +38,15 @@ module.exports = () => {
 
         logger.info(`File upload has been completed successfully | Filename ${filename}`);
       } catch (error) {
-        logger.error(`Error uploading file. File will be saved for future resending | File ${filename} | Error ${error}`);
-        await slack.postMessage(`Error uploading file. File will be saved for future resending | File ${filename}`);
+        const errorMessage = `Error uploading file. File will be saved for future resending | File ${filename}`;
+        logger.error(`${errorMessage} | Error ${error}`);
+
+        try {
+          await slack.postMessage(`${errorMessage}`);
+          await mailer.sendMail(`${errorMessage}`);
+        } catch (err) {
+          logger.error(`Error reporting failure | Error ${err}`);
+        }
 
         await store.upsertOne({
           filename, status: 'failed_to_send', retries: currentRetries + 1,

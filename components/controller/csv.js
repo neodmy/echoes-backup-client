@@ -5,7 +5,7 @@ const { formatDate } = require('../../util');
 
 module.exports = () => {
   const start = async ({
-    logger, config, archiver, sftp, slack, store,
+    logger, config, archiver, sftp, slack, store, mailer,
   }) => {
     const { localPath, remotePath, clientId } = config;
 
@@ -70,8 +70,15 @@ module.exports = () => {
         await store.upsertOne({ filename, status: sucessStatus });
         logger.info(`Extraction of CSV data has been completed successfully | Filename ${filename}`);
       } catch (error) {
-        logger.error(`Error extracting CSV data. File will be saved for future reprocessing | Filename ${filename} | Error ${error}`);
-        await slack.postMessage(`Error extracting CSV data. File will be saved for future reprocessing | File ${filename}`);
+        const errorMessage = `Error extracting CSV data. File will be saved for future reprocessing | Filename ${filename}`;
+        logger.error(`${errorMessage} | Error ${error}`);
+
+        try {
+          await slack.postMessage(`${errorMessage}`);
+          await mailer.sendMail(`${errorMessage}`);
+        } catch (err) {
+          logger.error(`Error reporting failure | Error ${err}`);
+        }
 
         await store.upsertOne({
           filename, status: failStatus, retries: currentRetries + 1,
