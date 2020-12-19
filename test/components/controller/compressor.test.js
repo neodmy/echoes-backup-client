@@ -5,6 +5,7 @@ const slackMock = require('../../mocks/slackMock');
 const sftpMock = require('../../mocks/sftpMock');
 const archiverMock = require('../../mocks/archiverMock');
 const storeMock = require('../../mocks/storeMock');
+const mailerMock = require('../../mocks/mailerMock');
 
 const {
   controller: { localPath },
@@ -19,10 +20,12 @@ describe('Compressor component tests', () => {
   let postMessageSpy;
 
   beforeAll(async () => {
+    sys.remove('task');
     sys.set('slack', slackMock());
     sys.set('sftp', sftpMock());
     sys.set('archiver', archiverMock());
     sys.set('store', storeMock());
+    sys.set('mailer', mailerMock());
     ({
       compressor, store, archiver, slack,
     } = await sys.start());

@@ -2,13 +2,16 @@ const path = require('path');
 const system = require('../../../system');
 
 const slackMock = require('../../mocks/slackMock');
+const mailerMock = require('../../mocks/mailerMock');
 
 describe('Sftp component tests', () => {
   let sys = system();
   let sftp;
 
   beforeAll(async () => {
+    sys.remove('task');
     sys = sys.set('slack', slackMock());
+    sys = sys.set('mailer', mailerMock());
     ({ sftp } = await sys.start());
   });
 
