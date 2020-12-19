@@ -56,7 +56,7 @@ describe('Uploader component tests', () => {
         expect(err).toBeDefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId, 'echoes_backup') });
 
         expect(store.deleteOne).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalledWith({ filename, status: sentStatus });
@@ -85,7 +85,7 @@ describe('Uploader component tests', () => {
         expect(err).toBeUndefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId, 'echoes_backup') });
 
         expect(store.deleteOne).not.toHaveBeenCalled();
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: sentStatus });
@@ -116,7 +116,7 @@ describe('Uploader component tests', () => {
         expect(err).toBeDefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId, 'echoes_backup') });
 
         expect(store.deleteOne).not.toHaveBeenCalled();
         expect(store.upsertOne).not.toHaveBeenCalledWith({ filename, status: sentStatus });
@@ -147,7 +147,7 @@ describe('Uploader component tests', () => {
         expect(err).toBeUndefined();
 
         expect(store.getOne).toHaveBeenCalledWith({ filename, status: failStatus });
-        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
+        expect(sftp.uploadDir).toHaveBeenCalledWith({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId, 'echoes_backup') });
 
         expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
         expect(store.upsertOne).toHaveBeenCalledWith({ filename, status: sentStatus });

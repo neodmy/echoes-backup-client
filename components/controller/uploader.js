@@ -31,7 +31,7 @@ module.exports = () => {
         logger.info(`File upload has started | Filename ${filename}`);
         currentRetries = await getcurrentRetries({ filename, status: failStatus });
 
-        await sftp.uploadDir({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId) });
+        await sftp.uploadDir({ dirName: filename, localPath, remotePath: path.join(remotePath, clientId, 'echoes_backup') });
 
         if (currentRetries) await store.deleteOne({ filename, status: failStatus });
         await store.upsertOne({ filename, status: successStatus });
