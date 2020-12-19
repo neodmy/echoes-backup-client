@@ -39,6 +39,9 @@ module.exports = {
     },
     reportEmails: process.env.REPORT_EMAILS,
   },
+  cron: {
+    schedule: process.env.CRON_SCHEDULE || '0 0 8 * * *',
+  },
   routes: {
     admin: {
       swaggerOptions: {
