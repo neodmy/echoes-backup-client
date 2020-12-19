@@ -24,6 +24,7 @@ describe('Uploader component tests', () => {
   let mailerSpy;
 
   beforeAll(async () => {
+    sys.remove('task');
     sys.set('slack', slackMock());
     sys.set('sftp', sftpMock());
     sys.set('archiver', archiverMock());

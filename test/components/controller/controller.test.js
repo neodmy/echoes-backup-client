@@ -8,6 +8,7 @@ const archiverMock = require('../../mocks/archiverMock');
 const storeMock = require('../../mocks/storeMock');
 const uploaderMock = require('../../mocks/uploaderMock');
 const csvMock = require('../../mocks/csvMock');
+const mailerMock = require('../../mocks/mailerMock');
 
 const {
   controller: { removalOffset, localPath },
@@ -22,12 +23,14 @@ describe('Controller component tests', () => {
   let store;
 
   beforeAll(async () => {
+    sys.remove('task');
     sys.set('slack', slackMock());
     sys.set('sftp', sftpMock());
     sys.set('archiver', archiverMock());
     sys.set('store', storeMock());
     sys.set('uploader', uploaderMock());
     sys.set('csv', csvMock());
+    sys.set('mailer', mailerMock());
     ({
       controller, archiver, uploader, csv, store,
     } = await sys.start());
