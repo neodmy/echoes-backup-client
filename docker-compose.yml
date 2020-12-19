@@ -26,10 +26,19 @@ services:
 
       # INIT
       INITIAL_CSV: inactive
-      INITIAL_UPLOAD: inactive
+      INITIAL_UPLOAD: inactive 
 
       # DATABASE
       MONGO_CONNECTION_STRING: mongodb://mongo-echoes-backup-client:27017
+
+      # MAILER
+      SENDER_SERVICE: 'sender_service'
+      SENDER_USER: 'user'
+      SENDER_PASSWORD: 'password'
+      REPORT_EMAILS: 'email1@email.com,email2@email.com'
+
+      # CRON
+      CRON_SCHEDULE: '0 0 8 * * *'
       
     ports:
       - "4000:4000"
