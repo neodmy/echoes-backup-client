@@ -131,7 +131,7 @@ describe('Csv component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(sftp.appendToFile).toHaveBeenCalledWith({ filename: 'daily.csv', remotePath: path.join(remotePath, clientId), content: expectedContent });
+        expect(sftp.appendToFile).toHaveBeenCalledWith({ filename: 'daily.csv', remotePath: path.join(remotePath, clientId, 'echoes_backup'), content: expectedContent });
         expect(sftp.createFile).not.toHaveBeenCalled();
         expect(store.deleteOne).not.toHaveBeenCalled();
 
@@ -170,7 +170,7 @@ describe('Csv component tests', () => {
         expect(err).toBeUndefined();
 
         expect(sftp.appendToFile).not.toHaveBeenCalled();
-        expect(sftp.createFile).toHaveBeenCalledWith({ filename: 'daily.csv', remotePath: path.join(remotePath, clientId), content: expectedContent });
+        expect(sftp.createFile).toHaveBeenCalledWith({ filename: 'daily.csv', remotePath: path.join(remotePath, clientId, 'echoes_backup'), content: expectedContent });
         expect(store.deleteOne).not.toHaveBeenCalled();
 
         expect(postMessageSpy).not.toHaveBeenCalled();
@@ -287,7 +287,7 @@ describe('Csv component tests', () => {
       } finally {
         expect(err).toBeUndefined();
 
-        expect(sftp.appendToFile).toHaveBeenCalledWith({ filename: 'daily.csv', remotePath: path.join(remotePath, clientId), content: expectedContent });
+        expect(sftp.appendToFile).toHaveBeenCalledWith({ filename: 'daily.csv', remotePath: path.join(remotePath, clientId, 'echoes_backup'), content: expectedContent });
         expect(sftp.createFile).not.toHaveBeenCalled();
         expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
 
@@ -334,7 +334,7 @@ describe('Csv component tests', () => {
         expect(err).toBeUndefined();
 
         expect(sftp.appendToFile).not.toHaveBeenCalled();
-        expect(sftp.createFile).toHaveBeenCalledWith({ filename: 'daily.csv', remotePath: path.join(remotePath, clientId), content: expectedContent });
+        expect(sftp.createFile).toHaveBeenCalledWith({ filename: 'daily.csv', remotePath: path.join(remotePath, clientId, 'echoes_backup'), content: expectedContent });
         expect(store.deleteOne).toHaveBeenCalledWith({ filename, status: failStatus });
 
         expect(postMessageSpy).not.toHaveBeenCalled();

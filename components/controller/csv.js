@@ -39,7 +39,7 @@ module.exports = () => {
     const handleCsvData = async filename => {
       const failStatus = 'failed_to_extract_csv';
       const sucessStatus = 'csv_processed';
-      const remotePathWithClientId = path.join(remotePath, clientId);
+      const remotePathWithClientId = path.join(remotePath, clientId, 'echoes_backup');
 
       let currentRetries;
       try {
