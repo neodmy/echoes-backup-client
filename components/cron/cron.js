@@ -5,8 +5,10 @@ module.exports = () => {
   const start = async ({ config, controller }) => {
     const { schedule } = config;
     initDailyJob = new CronJob(schedule, async () => {
-      const today = new Date().toISOString().split('T')[0];
-      await controller.processFileToExtractCsvData(today);
+      const dateToProcess = new Date().toISOString();
+      dateToProcess.setDate(dateToProcess.getDate() - 1);
+      const filename = dateToProcess.split('T')[0];
+      await controller.processFileToExtractCsvData(filename);
       await controller.processRetries();
       await controller.deleteOldFiles();
     });
