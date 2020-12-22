@@ -43,8 +43,15 @@ const asyncForEach = async (array, callback) => {
   }
 };
 
+const getPreviousDay = () => {
+  const dateToProcess = new Date();
+  dateToProcess.setDate(dateToProcess.getDate() - 1);
+  return dateToProcess.toISOString().split('T')[0];
+};
+
 module.exports = {
   shouldRemove,
   formatDate,
   asyncForEach,
+  getPreviousDay,
 };
