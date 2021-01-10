@@ -19,7 +19,7 @@ describe('Archiver component tests', () => {
 
   afterAll(() => sys.stop());
 
-  describe('compressfile', () => {
+  describe('compressFile', () => {
     test('should throw an error if the file does not exist', async () => {
       const fileName = 'not_a_file';
       const localDir = path.join(__dirname, '..', '..', 'fixtures', 'temp', 'echoes', fileName);

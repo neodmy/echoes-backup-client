@@ -504,7 +504,7 @@ describe('Controller component tests', () => {
       }
     });
 
-    test('should delete one older than the offset and handle an error when deleting the other file', async () => {
+    test('should delete one file older than the offset and handle an error when deleting the other file', async () => {
       const fileSent1 = {
         filename: getFilename(true, 1),
         status: 'sent',

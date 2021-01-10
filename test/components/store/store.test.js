@@ -156,7 +156,7 @@ describe('Store component tests', () => {
   });
 
   describe('deleteAll', () => {
-    test('should delete all documents in fail collection', async () => {
+    test('should delete all documents in a collection', async () => {
       const filename1 = '2020-08-25';
       const filename2 = '2020-08-26';
       const status1 = 'missing';
